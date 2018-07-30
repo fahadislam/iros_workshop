@@ -1,0 +1,201 @@
+\documentclass[a4paper]{article}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage[noend]{algpseudocode}
+\usepackage{algpseudocode}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\algdef{SE}[DOWHILE]{Do}{doWhile}{\algorithmicdo}[1]{\algorithmicwhile\ #1}%
+
+\title{Zero time search}
+
+\author{Fahad Islam}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Notations}
+A start region: $S$\\
+Target state: $t$\\
+Sub-regions: $R_i$ with centers $o_i$ and radii $r_i$, where i = 1 to n\\
+Heuristic function for a state $s$ within a region $R_i$: $h(s, o_i)$\\
+Cost of path between two states: $c(s_1, s_2)$\\
+Optimal cost of path between two states: $h^*(s_1, s_2)$\\
+Heuristic of path between two states: $h(s_1, s_2)$\\
+Successor of $s$: $s'$\\
+Query state $q$\\
+Frontiers $F_i$
+
+\section{Preprocessing Phase}
+
+\begin{algorithm}
+\caption{}\label{alg:1}
+\begin{algorithmic}[1]
+\State $r_i \leftarrow r_{max}$
+\Procedure{CoverRegion}{$S$}
+	\State $o_i$ $\leftarrow$ SampleInRegion($S$)
+    \State $r_i$ $\leftarrow$ ComputeReachability($o_i, r_{max}$)
+    \State $R_i$ $\leftarrow$ $(o_i, r_i)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{}\label{alg:1}
+\begin{algorithmic}[1]
+\State $r_{max}$	\Comment{maximum radius for a region}
+\State $V$ = $\phi$		\Comment{list of valid and uncovered frontier states}
+\State $I$ = $\phi$		\Comment{list of invalid and uncovered frontier states}
+\Procedure{CoverRegion}{$S$}
+	\State $s$ $\leftarrow$ SampleInRegion($S$)	\Comment{a valid sample}
+    \State Insert $s$ in $V$
+    \While {$V$ and $I$ are not empty}
+        \While {$V$ is not empty}
+        	\State $o$ $\leftarrow$ $V.pop()$
+    		\State $(Open, r)$ $\leftarrow$ ComputeReachability($o, r_{max}$)
+    		\State insert Valid($Open$) in $V$	\Comment{only uncovered states}
+        	\State insert Invalid($Open$) in $I$	\Comment{only uncovered states}
+    		\State $R_i$ $\leftarrow$ $(o, r)$
+        \EndWhile
+        \While {$I$ is not empty}
+        	\State $s$ $\leftarrow$ $I.pop()$
+        	\State $(X, r)$ $\leftarrow$ SearchForValidStates($s, r_{max}$)	\Comment{reachability like search}
+            \State $\hat{R}_i$ $\leftarrow$ $(r,s)$	\Comment{invalid region}
+            \If {$X$ is not empty}	\Comment{no valid state found}
+        		\State insert $X$ in $V$	\Comment{only uncovered states}
+                \State break
+        	\EndIf
+        \EndWhile
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+% \begin{algorithm}
+% \caption{}\label{alg:2}
+% \begin{algorithmic}[1]
+% \Procedure{ComputeReachability}{$o_i, r_{max}$}
+% \State $G \leftarrow \{o_i\}$	\Comment{Greedy set}
+% \State $Open \leftarrow \{o_i\}$  \Comment{priority: min $h(s,o_i)$ value}
+% \State $r_i \leftarrow r_{max}$
+
+% \Do
+%     \State $s$ $\leftarrow$ $Open$.pop()
+%     \For {each $p$ $\in$ Preds($s$)}
+%         \If {$\forall$ GreedySuccs($p$) $\in$ $G$}
+%             \If {Valid(p)}
+%                 \State $G \leftarrow G \cup p$
+%             \EndIf
+%             \State Insert $p$ in $Open$ with priority $h(p, o_i)$
+%             \Else
+%                 \State $r_i \leftarrow \min{(r_i, h(p, o_i))}$
+%         \EndIf
+%     \EndFor
+% \doWhile {$h(s,o_i) < r_i$}
+
+% \EndProcedure
+% \end{algorithmic}
+% \end{algorithm}
+
+\begin{algorithm}
+\caption{}\label{alg:3}
+\begin{algorithmic}[1]
+\Procedure{ComputeReachability}{$o_i, r_{max}$}
+\State $G \leftarrow \{o_i\}$	\Comment{Greedy set}
+\State $Open \leftarrow \{$Preds($o_i$)$\}$  \Comment{priority: min $h(s,o_i)$ value}
+\State $r_i \leftarrow 0$
+
+\While {$r_i \leq r_{max}$}
+    \State $s \leftarrow$ $Open$.pop()
+    \If {Valid(s)}
+        \State $s'_g \leftarrow$ GreedySucc($s$)	\Comment{acc. to some tie breaking criteria}
+        \If {$s'_g$ $\in$ $G$ and Valid(edge(s,$s'_g$))}
+            \State Insert Preds($s$) in $Open$ with priority $h(p, o_i)$
+            \State $G \leftarrow G \cup s$
+        \Else
+            \State $r_i \leftarrow h(s, o_i)$
+            \State break
+        \EndIf
+     \Else
+         \State Insert Preds($s$) in $Open$ with priority $h(p, o_i)$
+     \EndIf
+\EndWhile
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{}\label{alg:4}
+\begin{algorithmic}[1]
+\Procedure{ComputeReachability}{$o_i, r_{max}$}
+\State $G \leftarrow \{o_i\}$	\Comment{Greedy set}
+\State $Open \leftarrow \{$Preds($o_i$)$\}$  \Comment{priority: min $h(s,o_i)$ value}
+\State $r_i \leftarrow 0$
+
+\While {$r_i \leq r_{max}$}
+    \State $s \leftarrow$ $Open$.pop()
+    \State $s'_g \leftarrow$ GreedySucc($s$)	\Comment{acc. to some tie breaking criteria}
+    \If {$s'_g$ $\in$ $G$ and Valid(edge(s,$s'_g$))}
+        \State $G \leftarrow G \cup s$	\Comment{$s$ is greedy}
+    \ElsIf {Valid(s)}
+        \State break
+    \EndIf
+    \State $r_i \leftarrow h(s, o_i)$
+    \For {each $p \in Preds($s$)$}
+        \If {$p \notin G$}		\Comment{avoid reevaluation}
+            \State Insert $p$ in $Open$ with priority $h(p, o_i)$
+        \EndIf
+    \EndFor
+\EndWhile
+\State return $r_i$
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\section{Query Phase}
+\subsection{Zero Expansion Delay}
+\textbf{Criteria 1}\\
+Running $A^\ast$ if, $\forall$ $s$ $\in$ $R_i$, $h(s, o_i) = h^\ast(s, o_i)$ and ties are broken in favor of larger $g$ value then the search will have zero expansion delay.\\
+\\
+\textbf{Criteria 2}\\
+Running greedy heuristic search if, $\forall$ $s$ $\in$ $R_i$ except $s=o_i$, there exists $s'$ $\in$ $R_i$ $\mid$ $h(s',o_i) < h(s,o_i)$ then the search will have zero expansion delay.
+
+\subsection*{Using Crit. 1 and Alg. 1}
+For a query state $q$, identify a region $R_i$ $\mid$ $h^*(s, o_i) \leq r_i$.
+If the optimal cost to go $h^*(s,o_i)$ for all the states within a region $R_i$ is known, $A^\leq*$ search will find an optimal path from $q$ to $o_i$ with zero expansion delay.
+
+\subsection*{Using Crit. 2 and Alg. 2}
+For a query state $q$, identify a region $R_i$ $\mid$ $h(q, o_i) < r_i$.
+If the heuristic function $h(s,o_i)$ is weak monotonic, greedy search will find a path from $q$ to $o_i$ with zero expansion delay.\\
+
+
+\subsubsection*{Weak Monotonic Heuristic}
+If for any state $s \in S$
+\begin{center}
+$\exists$ $s' \in Succs(s)$ $:$ $h(s', o_i) \leq h(s,o_i)$
+\end{center}
+then the heuristic is weak monotonic. In other words, if following the heuristic greedily, the heuristic values of the expanded states are monotonically non-increasing then the heuristic is weak monotonic.
+
+
+% \begin{algorithm}
+% \caption{}\label{alg:euclid}
+% \begin{algorithmic}[1]
+% \Procedure{Euclid}{$a,b$}\Comment{The g.c.d. of a and b}
+% \State $r\gets a\bmod b$
+% \While{$r\not=0$}\Comment{We have the answer if r is 0}
+% \State $a\gets b$
+% \State $b\gets r$
+% \State $r\gets a\bmod b$
+% \EndWhile\label{euclidendwhile}
+% \State \textbf{return} $b$\Comment{The gcd is b}
+% \EndProcedure
+% \end{algorithmic}
+% \end{algorithm}
+\end{document}

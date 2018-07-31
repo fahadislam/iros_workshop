@@ -75,6 +75,26 @@ This electronic document is a “live” template. The various components of your pa
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION}
+%1. What is the problem?
+Consider the problem of a robot picking up objects from a conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
+Similarly, consider a robot given the task of stock replenishment---moving in a supermarket and loading items from a cart it carries to half-empty shelves.
+%2. Why is it relevant?
+These problems are examples of repetitive tasks performed by (possibly highly articulated) robots in static environments where the start and target of each repetitive task is similar, yet not identical, to previous tasks.
+%3. Why is it hard?
+As the set of possible start and target locations may be large, caching pre-computed paths for all these queries in advance is unmanageable. 
+Clearly, once a task is presented to the robot, it can compute a desired path online.
+However, this may incur large online planning times that may be unacceptable in many settings.
+Thus, a natural approach is to preprocess the environment in offline to allow for fast planning times online.
+
+%4. What have others done?
+The \textsf{PRM}~\cite{}
+%5. What's missing?
+%6. What is our ONE key insight?
+%7. How do we compare against the state of the art?
+%8. What are our contributions?
+%9. What are our limitations?
+
+
 
 % This template provides authors with most of the formatting specifications needed for preparing electronic versions of their papers. All standard paper components have been specified for three reasons: (1) ease of use when formatting individual papers, (2) automatic compliance to electronic requirements that facilitate the concurrent or later production of electronic products, and (3) conformity of style throughout a conference proceedings. Margins, column widths, line spacing, and type styles are built-in; examples of the type styles are provided throughout this document and are identified in italic type, within parentheses, following the example. Some components, such as multi-leveled equations, graphics, and tables are not prescribed, although the various table text styles are provided. The formatter will need to create these components, incorporating the applicable criteria that follow.
 

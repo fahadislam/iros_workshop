@@ -1,0 +1,17 @@
+# Ignore latex stuff
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.pptx
+*.lof
+*.lot
+*.idx
+*.ind
+*.ilg
+*.toc
+*.dvi
+*.gz
+latexSuite*
+root.pdf

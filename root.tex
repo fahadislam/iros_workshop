@@ -142,10 +142,11 @@ We propose a multi-query motion planning algorithm which is well suited for the 
   \item The goal configuration $s_{goal}$ falls within a goal $\textit{region}$ $G$, which is a relatively small subset of the full configuration space of the robot. $G$ is defined as a region around some nominal goal configuration.
   \item A considerable amount of preprocessing time is provided.
   \item During the query phase the environment remains static. 
-  \item We have access to a $\textit{weakly monotonic}$ heuristic function $h(s)$ defined as 
+  \item We have access to a $\textit{weakly monotonic}$ heuristic function $h(s_1, s_2)$ defined as 
 
   \begin{center}
-  $h(s) \geq \min\limits_{\forall s' \in Succs(s)} h(s') \quad \forall s,s' \in G \wedge s \neq s_{goal}$ 
+  \footnotesize
+    $h(s_1, s_2) \geq \min\limits_{\forall s_1' \in Succs(s_1)} h(s_1', s_2) \quad \forall s_1,s_1' \in G \wedge s_1 \neq s_2$ 
   \end{center}
   Namely, for any state $s$ in $G$ except $s_{goal}$ one of its successors (also belonging to $G$) must have a heuristic value less than or equal to its heuristic value. This property should hold considering that all the edges in $G$ are traversable i.e. they have finite costs.
   % $G$ is defined as a 6-dimensional window around some nominal goal pose in the task space, $q = (\textit{x, y, z, roll, pitch, yaw})$.
@@ -175,12 +176,13 @@ The preprocessing phase is detailed in Alg.~\ref{alg:1}. The algorithm takes in 
 \Procedure{PreprocessRegion}{$G, r_{max}$}
   \State $V$ = $\phi$   \Comment{list of valid frontier states} \label{alg:1:v}
   \State $I$ = $\phi$   \Comment{list of invalid frontier states} \label{alg:1:i}
-  \State $s_g$ $\leftarrow$ GetNominalGoal($G$)
-    \State Insert $s_g$ in $V$
+  \State $s_{nominal}$ $\leftarrow$ GetNominalGoal($G$)
+    \State Insert $s_{nominal}$ in $V$
     \While {$V$ and $I$ are not empty}
         \While {$V$ is not empty}
           \State $s_{attractor_i}$ $\leftarrow$ $V.pop()$
             \If {$s_{attractor_i}$ is not covered}
+                \State $\pi_i$ = PlanPath($s_{attractor_i}, s_{goal}$)
                 \State $(Open, r)$ $\leftarrow$ ComputeReachability($s_{attractor_i}, r_{max}$) \label{alg:1:cr}
                 \State insert Valid($Open$) in $V$  \label{alg:1:insert_v}
                 \State insert Invalid($Open$) in $I$   \label{alg:1:insert_i}
@@ -199,33 +201,34 @@ The preprocessing phase is detailed in Alg.~\ref{alg:1}. The algorithm takes in 
             \EndIf
         \EndWhile
     \EndWhile
+    return $R_i$, $\pi_i$ for i = 1 to $n$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
 \subsubsection{Reachability Search}
-The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2}). The algorithm maintains a list of $greedy$ states. A s
+The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2}). We call this algorithm Reachability Search. The algorithm maintains a set of $reachable$ states $S_{reachable}$. The invariant that the reachable states maintain is that, the greedy successor of every reachable state is also a reachable state, except the attractor which is initially labelled as reachable (line~\ref{alg:2:reachable}).  The idea here is that running a greedy search from any reachable state in the subregion will expand states along a single path to the attractor state. The algorithm computes a subregion that covers the maximum number of reachable states that can fit into a hyper-ball and the measure for the radius of this hyper-ball is the heuristic function $h(s,s_{attractor_i})$. The search maintains a priority queue $Open$ with $h(s,s_{attractor_i})$ as the priority. Initially the predecessors of $s_{attractor_i}$ are inserted in the $Open$ (line~\ref{alg:2:open}). If for each expanded predecessor, its valid greedy successor is in $S_{reachable}$, then the predecessor is also labelled as reachable (lines~\ref{alg:2:crit} and~\ref{alg:2:set}). As the priorty used for $Open$ is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). Now we could terminate the search as soon as we see the first non-reachable state (say entering an obstacle) but then it won't capture the maximum number of reachable states. Instead, we let the region grow through the invalid states and we terminate when the search pops a state which is valid but does not have a successor state in $S_{reachable}$ (line~\ref{alg:2:terminate}). Intuitively it corresponds to the condition when then reachability search exists an obstacle. At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are $reachable$.
 
 \begin{algorithm}
 \footnotesize
 \caption{Reachability Search}\label{alg:2}
 \begin{algorithmic}[1]
 \Procedure{ComputeReachability}{$s_{attractor_i}, r_{max}$}
-\State $Greedy \leftarrow \{s_{attractor_i}\}$ \Comment{Greedy set}
-\State $Open \leftarrow \{$Preds($s_{attractor_i}$)$\}$  \Comment{priority: min $h(s,s_{attractor_i})$ value}
+\State $S_{reachable} \leftarrow \{s_{attractor_i}\}$ \Comment{Reachable set} \label{alg:2:reachable}
+\State $Open \leftarrow \{$Preds($s_{attractor_i}$)$\}$  \Comment{priority: min $h(s,s_{attractor_i})$} \label{alg:2:open}
 \State $r_i \leftarrow 0$
 
 \While {$r_i \leq r_{max}$}
     \State $s \leftarrow$ $Open$.pop()
     \State $s'_g \leftarrow$ GreedySucc($s$)  \Comment{acc. to some tie breaking criteria}
-    \If {$s'_g$ $\in$ $Greedy$ and Valid(edge(s,$s'_g$))}
-        \State $Greedy \leftarrow Greedy \cup s$  \Comment{$s$ is greedy}
-    \ElsIf {Valid(s)}
+    \If {$s'_g$ $\in$ $S_{reachable}$ and Valid(edge(s,$s'_g$))}  \label{alg:2:crit}
+        \State $S_{reachable} \leftarrow S_{reachable} \cup s$  \Comment{$s$ is greedy} \label{alg:2:set}
+    \ElsIf {Valid(s)} \label{alg:2:terminate}
         \State break
     \EndIf
-    \State $r_i \leftarrow h(s, s_{attractor_i})$
+    \State $r_i \leftarrow h(s, s_{attractor_i})$ \label{alg:2:rad}
     \For {each $p \in Preds($s$)$}
-        \If {$p \notin Greedy$}    \Comment{avoid reevaluation}
+        \If {$p \notin S_{reachable}$}    \Comment{avoid reevaluation}
             \State Insert $p$ in $Open$ with priority $h(p, s_{attractor_i})$
         \EndIf
     \EndFor

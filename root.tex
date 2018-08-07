@@ -195,37 +195,46 @@ In the query phase, given a query \sGoal, we
 
 \subsection {Algorithm}
 \subsubsection{Preprocessing Phase}
-The preprocessing phase is detailed in Alg.~\ref{alg:1}. The algorithm takes in the specification of the goal region and the start state as an input and outputs the subregions specified by an attractor state and a radius and the computed paths from each of the attractors to the start state. The way these radii are computed is explained in Alg.~\ref{alg:2}. This preprocessed information is all what is used in the query phase. $G$ is centered around some nominal goal state (assumed to be valid) which is used as the attractor for the first region. The algorithm maintains a set each for valid and invalid frontier states (lines~\ref{alg:1:v} and~\ref{alg:1:i}). Each time a subregion is computed (line~\ref{alg:1:cr}), the frontier states are populated into $V$ and $I$ (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}) after checking the state validity which typically implies running a collision checker. After the first region is computed, a state from $V$ is popped and used as the attractor for the next region (line~\ref{alg:1:pop}). For every attractor, a path $\pi_i$ to the $s_{start}$ is also computed (line~\ref{alg:1:path}). Note that an attractor gets discarded if it is already covered by an existing region (line~\ref{alg:1:discard}). Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from the invalid set $I$ (lines ~\ref{alg:1:iv_loop} to ~\ref{alg:1:iv_region}). If a valid and uncovered state is found it is added to $V$ and the algorithm goes back to computing subregions (lines ~\ref{alg:1:x_states} to ~\ref{alg:1:break}), otherwise if $I$ also gets empty the algorithm terminates and at this point it is guaranteed that each valid state contained in $G$ is covered under atleast one subregion.
+The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G$ and outputs a set of subregions~$R_i$ specified by an attractor state \sAttract and a corresponding radius $r_i$ and the computed paths from each \sAttract to \sStart. 
+The way these radii are computed is explained in Alg.~\ref{alg:2}. 
+This preprocessed information is all what is used in the query phase. 
+The goal region~$G$ is centered around some nominal goal state (assumed to be valid) which is used as the attractor for the first region. The algorithm maintains a set each for valid and invalid frontier states (lines~\ref{alg:1:v} and~\ref{alg:1:i}). Each time a subregion is computed (line~\ref{alg:1:cr}), the frontier states are populated into $V$ and $I$ (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}) after checking the state validity which typically implies running a collision checker. After the first region is computed, a state from $V$ is popped and used as the attractor for the next region (line~\ref{alg:1:pop}). For every attractor, a path $\pi_i$ to the $s_{start}$ is also computed (line~\ref{alg:1:path}). Note that an attractor gets discarded if it is already covered by an existing region (line~\ref{alg:1:discard}). Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from the invalid set $I$ (lines ~\ref{alg:1:iv_loop} to ~\ref{alg:1:iv_region}). If a valid and uncovered state is found it is added to $V$ and the algorithm goes back to computing subregions (lines ~\ref{alg:1:x_states} to ~\ref{alg:1:break}), otherwise if $I$ also gets empty the algorithm terminates and at this point it is guaranteed that each valid state contained in $G$ is covered under atleast one subregion.
 
 \begin{algorithm}
 \footnotesize
 \hspace*{\algorithmicindent} \textbf{Inputs:} $G$, $\sStart$   
 \Comment{goal region and start state} \\
-\hspace*{\algorithmicindent} \textbf{Outputs:} $R_i = (sAttractor, r_i)$, $\pi_i$,
+\hspace*{\algorithmicindent} \textbf{Outputs:} $R_i = (\sAttract, r_i)$, $\pi_i$,
 \Comment{subregions and paths to $\sStart$} \\
 \hspace*{\algorithmicindent} \textbf{Parameters:} $r_{\rm max}$   \Comment{maximum radius of a region}
 \caption{Goal Region Preprocessing}\label{alg:1}
 \begin{algorithmic}[1]
 \Procedure{PreprocessRegion}{$G, r_{\rm max}$}
-  \State $V$ = $\emptyset$   \Comment{list of valid frontier states} \label{alg:1:v}
-  \State $I$ = $\emptyset$   \Comment{list of invalid frontier states} \label{alg:1:i}
-  \State \sNom $\leftarrow$ GetNominalGoal($G$)
-    \State Insert \sNom  in $V$
+  \State $s \leftarrow$ SampleValidState($G$)  
+  \State $V \leftarrow \{ s \}$   \Comment{valid frontier states initialized to a random state} \label{alg:1:v}
+  \State $I$ = $\emptyset$   \Comment{invalid frontier states} \label{alg:1:i}
+  \State $ i \leftarrow 0$
+  
+  \vspace{2mm}
     \While {$V$ and $I$ are not empty}
         \While {$V$ is not empty}
-          \State $\sAttract$ $\leftarrow$ $V.pop()$ \label{alg:1:pop}
-            \If {$\sAttract$ is not covered}  \label{alg:1:discard}
-                \State $\pi_i$ = PlanPath($\sAttract, \sStart$)  \label{alg:1:path}
-                \State $(Open, r)$ $\leftarrow$ ComputeReachability($\sAttract, r_{\rm max}$) \label{alg:1:cr}
+          \State $s \leftarrow V.\text{pop}()$ \label{alg:1:pop}
+            \If {$\nexists R_i \ s.t. \ s \in R_i$ }  \label{alg:1:discard}
+            \Comment{$s$ is not covered}
+				\State $\sAttract \leftarrow s$                
+                \State $\pi_i$ = PlanPath($\sAttract , \sStart$)  \label{alg:1:path}
+                \State $(Open, r_i) \leftarrow$ ComputeReachability($\sAttract, r_{\rm max}$) \label{alg:1:cr}
                 \State insert Valid($Open$) in $V$  \label{alg:1:insert_v}
                 \State insert Invalid($Open$) in $I$   \label{alg:1:insert_i}
-                \State $R_i$ $\leftarrow$ $(\sAttract, r_i)$
-            \EndIf
+                \State $R_i$ $\leftarrow$ $(\sAttract, r_i)$; \hspace{2mm} $ i \leftarrow i+1$            \EndIf
         \EndWhile
+
+\vspace{2mm}        
+        
         \While {$I$ is not empty} \label{alg:1:iv_loop}
             \State $s$ $\leftarrow$ $I.pop()$
-          \If {$\sAttract$ is not covered}
-                \State $(X, r)$ $\leftarrow$ SearchValidUncoveredStates($s, r_{max}$)
+			\If {$\nexists R_i \ s.t. \ s \in R_i$ }      \Comment{$s$ is not covered}
+                \State $(X, r)$ $\leftarrow$ SearchValidUncoveredStates($s, r_{\rm max}$)
                 \State $\hat{R}_i$ $\leftarrow$ $(r,s)$ \Comment{invalid region}  \label{alg:1:iv_region}
                 \If {$X$ is not empty}  \Comment{no valid state found}  \label{alg:1:x_states}
                     \State insert $X$ in $V$
@@ -234,6 +243,9 @@ The preprocessing phase is detailed in Alg.~\ref{alg:1}. The algorithm takes in 
             \EndIf
         \EndWhile
     \EndWhile
+
+  \vspace{2mm}
+
     \Return $R_i$, $\pi_i$ for i = 1 to $n$
 \EndProcedure
 \end{algorithmic}
@@ -246,12 +258,12 @@ The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg
 \footnotesize
 \caption{Reachability Search}\label{alg:2}
 \begin{algorithmic}[1]
-\Procedure{ComputeReachability}{$s_{attractor_i}, r_{max}$}
-\State $S_{reachable} \leftarrow \{s_{attractor_i}\}$ \Comment{Reachable set} \label{alg:2:reachable}
-\State $Open \leftarrow \{$Preds($s_{attractor_i}$)$\}$  \Comment{priority: min $h(s,s_{attractor_i})$} \label{alg:2:open}
+\Procedure{ComputeReachability}{$\sAttract, r_{\rm max}$}
+\State $S_{reachable} \leftarrow \{\sAttract\}$ \Comment{Reachable set} \label{alg:2:reachable}
+\State $Open \leftarrow \{$Preds($\sAttract$)$\}$  \Comment{priority: min $h(s,\sAttract)$} \label{alg:2:open}
 \State $r_i \leftarrow 0$
 
-\While {$r_i \leq r_{max}$}
+\While {$r_i \leq r_{\rm max}$}
     \State $s \leftarrow$ $Open$.pop()
     \State $s'_g \leftarrow$ GreedySucc($s$)  \Comment{acc. to some tie breaking criteria}
     \If {$s'_g$ $\in$ $S_{reachable}$ and Valid(edge(s,$s'_g$))}  \label{alg:2:crit}
@@ -259,10 +271,10 @@ The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg
     \ElsIf {Valid(s)} \label{alg:2:terminate}
         \State break
     \EndIf
-    \State $r_i \leftarrow h(s, s_{attractor_i})$ \label{alg:2:rad}
+    \State $r_i \leftarrow h(s, \sAttract)$ \label{alg:2:rad}
     \For {each $p \in Preds($s$)$}
         \If {$p \notin S_{reachable}$}    \Comment{avoid reevaluation}
-            \State Insert $p$ in $Open$ with priority $h(p, s_{attractor_i})$
+            \State Insert $p$ in $Open$ with priority $h(p, \sAttract)$
         \EndIf
     \EndFor
 \EndWhile

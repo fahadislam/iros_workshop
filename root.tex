@@ -39,6 +39,7 @@
 \usepackage{algorithmicx}
 \usepackage[noend]{algpseudocode}
 \usepackage{algpseudocode}
+\algrenewcommand\algorithmicindent{1.0em}%
 
 
 \newcommand{\calX}{\ensuremath{\mathcal{X}}\xspace}
@@ -153,7 +154,7 @@ We start (Sec.~\ref{sec:pdef}) by formally defining our problem and continue...
 \subsection{Problem Formulation and assumptions}
 Let $\calX$ be the configuration space of a robot operating in a static environment.
 We are given in advance a start configuration~$\sStart \in \calX$ and some goal region~$G \subset \calX$.
-In the query phase we will be given a multiple queries $(\sStart, s_{\rm goal})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\rm goal}$.
+In the query phase we will be given a multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
 We discretize $\calX$ into a state lattice $\calS$ such that any state $s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$ and make the following assumptions:
 
@@ -179,38 +180,59 @@ In the preprocessing phase, $G$ is decomposed into~$n$ (possibly overlapping) su
 Each subregion $R_i$ will be defined using a so-called ``attractor state''~
 \sAttract and a radius $r_i$.
 % centered around what we call the $attractor$ states $s_{attractor_i}$ and radii $r_i$, where $i$ = 1 to $n$. 
-These regions are constructed in such a way that
+These regions are constructed in such a way that the following two properties hold
 \begin{enumerate}
-  \item For any goal state $s_{\rm goal} \in R_i \cap G$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at \sStart will result in a collision-free path to \sAttract.
-  \item The union of all the subregions completely cover $G$. 
+  \item[P1] For any goal state $s_{\text{goal}} \in R_i \cap G$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at \sStart will result in a collision-free path to \sAttract.
+  \item[P2] The union of all the subregions completely cover $G$. 
   		Namely, $\forall s \in \calL \cap G, \exists R_i \ s.t. \ s \in R_i$.
   		%In other words, any query state $\sGoal \in G$ will fall in atleast one of the subregions.
 \end{enumerate}
 
-In the preprocessing stage, we precompute a library of collision-free paths $\calL$ which includes one path from \sStart to each attractor state. 
+In the preprocessing stage, we precompute a library of collision-free paths $\calL$ which includes one path from $\sStart$ to each attractor state. 
 In the query phase, given a query \sGoal, we 
 (i)~identify a region $R_i$ such $\sGoal \in R_i$ (using the precomputed radii~$r_i$),
-(ii)~run a greedy search towards~\sAttract using and
+(ii)~run a greedy search towards~\sAttract by greedily choosing at every point the successor that minimizes~$h$ and
 (iii)~append this path segment with the precomputed path in $\calL$ to \sStart  to obtain the complete plan.
 
 \subsection {Algorithm}
+{\color{blue} Can we loose $r_{\text{max}}$?.}
+
 \subsubsection{Preprocessing Phase}
 The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G$ and outputs a set of subregions~$R_i$ specified by an attractor state \sAttract and a corresponding radius $r_i$ and the computed paths from each \sAttract to \sStart. 
-The way these radii are computed is explained in Alg.~\ref{alg:2}. 
-This preprocessed information is all what is used in the query phase. 
-The goal region~$G$ is centered around some nominal goal state (assumed to be valid) which is used as the attractor for the first region. The algorithm maintains a set each for valid and invalid frontier states (lines~\ref{alg:1:v} and~\ref{alg:1:i}). Each time a subregion is computed (line~\ref{alg:1:cr}), the frontier states are populated into $V$ and $I$ (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}) after checking the state validity which typically implies running a collision checker. After the first region is computed, a state from $V$ is popped and used as the attractor for the next region (line~\ref{alg:1:pop}). For every attractor, a path $\pi_i$ to the $s_{start}$ is also computed (line~\ref{alg:1:path}). Note that an attractor gets discarded if it is already covered by an existing region (line~\ref{alg:1:discard}). Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from the invalid set $I$ (lines ~\ref{alg:1:iv_loop} to ~\ref{alg:1:iv_region}). If a valid and uncovered state is found it is added to $V$ and the algorithm goes back to computing subregions (lines ~\ref{alg:1:x_states} to ~\ref{alg:1:break}), otherwise if $I$ also gets empty the algorithm terminates and at this point it is guaranteed that each valid state contained in $G$ is covered under atleast one subregion.
 
-\begin{algorithm}
+The algorithm covers~$G$ by iteratively finding a state $s$ not covered by any region and computing a new region centered at $s$.
+To ensure that $G$ is complete covered (property P2) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
+We start by initializing~$V$ to some random state in $G$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G$ is indeed covered.
+
+At every iteration, we pop a state from $V$ (line~\ref{alg:1:pop}), and if there is no region covering it, we add it as a new attractor state and compute a path $\pi_i$ to $\sStart$ (line~\ref{alg:1:path}).
+We then compute the corresponding region (line~\ref{alg:1:cr} and Alg.~\ref{alg:2}).
+
+As we will see shortly, computing a region corresponds to a Dijkstra-like search centered at the attractor state.
+The search terminates with the region's radius $r_i$ and a list of frontier states that comprise of the region's boundary.
+The valid and invalid states are then added to $V$ and $I$, respectively (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}).
+
+
+Once $V$ gets empty the algorithm starts to search for states which are invalid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty the algorithm terminates and at this point it is guaranteed that each valid state contained in $G$ is covered under atleast one subregion.
+
+{\color{blue} What is SearchValidUncoveredStates?.}
+
+
+\begin{algorithm}[t]
 \footnotesize
 \hspace*{\algorithmicindent} \textbf{Inputs:} $G$, $\sStart$   
-\Comment{goal region and start state} \\
+\Comment{goal region and start state} 
+
 \hspace*{\algorithmicindent} \textbf{Outputs:} $R_i = (\sAttract, r_i)$, $\pi_i$,
-\Comment{subregions and paths to $\sStart$} \\
-\hspace*{\algorithmicindent} \textbf{Parameters:} $r_{\rm max}$   \Comment{maximum radius of a region}
+\Comment{subregions and paths to $\sStart$} 
+
+\hspace*{\algorithmicindent}
+ \textbf{Parameters:} $r_{\text{max}}$   \Comment{maximum radius of a region}
 \caption{Goal Region Preprocessing}\label{alg:1}
+
+
 \begin{algorithmic}[1]
-\Procedure{PreprocessRegion}{$G, r_{\rm max}$}
-  \State $s \leftarrow$ SampleValidState($G$)  
+\Procedure{PreprocessRegion}{$G, r_{\text{max}}$}
+  \State $s \leftarrow$\textsc{ SampleValidState}($G$)  
   \State $V \leftarrow \{ s \}$   \Comment{valid frontier states initialized to a random state} \label{alg:1:v}
   \State $I$ = $\emptyset$   \Comment{invalid frontier states} \label{alg:1:i}
   \State $ i \leftarrow 0$
@@ -222,10 +244,10 @@ The goal region~$G$ is centered around some nominal goal state (assumed to be va
             \If {$\nexists R_i \ s.t. \ s \in R_i$ }  \label{alg:1:discard}
             \Comment{$s$ is not covered}
 				\State $\sAttract \leftarrow s$                
-                \State $\pi_i$ = PlanPath($\sAttract , \sStart$)  \label{alg:1:path}
-                \State $(Open, r_i) \leftarrow$ ComputeReachability($\sAttract, r_{\rm max}$) \label{alg:1:cr}
-                \State insert Valid($Open$) in $V$  \label{alg:1:insert_v}
-                \State insert Invalid($Open$) in $I$   \label{alg:1:insert_i}
+                \State $\pi_i$ = \textsc{PlanPath}($\sAttract , \sStart$)  \label{alg:1:path}
+                \State $(\text{Open}, r_i) \leftarrow$ \textsc{ComputeReachability}($\sAttract, r_{\text{max}}$) \label{alg:1:cr}
+                \State insert Valid(Open) in $V$  \label{alg:1:insert_v}
+                \State insert Invalid(Open) in $I$   \label{alg:1:insert_i}
                 \State $R_i$ $\leftarrow$ $(\sAttract, r_i)$; \hspace{2mm} $ i \leftarrow i+1$            \EndIf
         \EndWhile
 
@@ -234,11 +256,11 @@ The goal region~$G$ is centered around some nominal goal state (assumed to be va
         \While {$I$ is not empty} \label{alg:1:iv_loop}
             \State $s$ $\leftarrow$ $I.pop()$
 			\If {$\nexists R_i \ s.t. \ s \in R_i$ }      \Comment{$s$ is not covered}
-                \State $(X, r)$ $\leftarrow$ SearchValidUncoveredStates($s, r_{\rm max}$)
-                \State $\hat{R}_i$ $\leftarrow$ $(r,s)$ \Comment{invalid region}  \label{alg:1:iv_region}
+                \State $(X, r)$ $\leftarrow$ \textsc{SearchValidUncoveredStates}($s, r_{\text{max}}$)
+                \State $\hat{R}_i$ $\leftarrow$ $(s,r)$ \Comment{invalid region}  \label{alg:1:iv_region}
                 \If {$X$ is not empty}  \Comment{no valid state found}  \label{alg:1:x_states}
                     \State insert $X$ in $V$
-                    \State break  \label{alg:1:break}
+                    \State \textbf{break} \label{alg:1:break}
                 \EndIf
             \EndIf
         \EndWhile
@@ -246,35 +268,49 @@ The goal region~$G$ is centered around some nominal goal state (assumed to be va
 
   \vspace{2mm}
 
-    \Return $R_i$, $\pi_i$ for i = 1 to $n$
+  \State \Return $R_i$, $\pi_i$ for $i = 1 \text{ to } n$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
 \paragraph*{Reachability Search}
-The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2}). We call it Reachability Search. The algorithm maintains a set of $reachable$ states $S_{reachable}$. The invariant that the reachable states maintain is that, the greedy successor of every reachable state is also a reachable state, except the attractor which is initially labelled as reachable (line~\ref{alg:2:reachable}).  The idea here is that running a greedy search from any reachable state in the subregion will only expand states along the path to the attractor state. The algorithm computes a subregion that covers the maximum number of reachable states that can fit into a hyper-ball and the measure for the radius of this hyper-ball is the heuristic function $h(s,s_{attractor_i})$. The search maintains a priority queue $Open$ with $h(s,s_{attractor_i})$ as the priority. Initially the predecessors of $s_{attractor_i}$ are inserted in the $Open$ (line~\ref{alg:2:open}). If for each expanded predecessor, its valid greedy successor is in $S_{reachable}$, then the predecessor is also labelled as reachable (lines~\ref{alg:2:crit} and~\ref{alg:2:set}). As the priorty used for $Open$ is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). Now we could terminate the search as soon as we see the first non-reachable state (say a state entering an obstacle) but then it won't capture the maximum number of reachable states. Instead, we let the region grow through the invalid states and we terminate when the search pops a state which is valid but does not have a successor state in $S_{reachable}$ (line~\ref{alg:2:terminate}). Intuitively it corresponds to the condition when the reachability search exists an obstacle. At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
+The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2}) which we call a ``Reachability Search''. The algorithm maintains a set of \emph{reachable} states $S_{\text{reachable}}$ for which property P1 holds. 
+Namely, the greedy successor\footnote{A state $s' \in \text{Succ}(s)$ is said to be a \emph{greedy} successor according to some heuristic $h(\cdot)$ if it has the minimal $h$-value  among all successors.} $s'$ of every reachable state $s \in S_{\text{reachable}}$ is also a reachable state, except for the attractor state \sAttract. 
+This will ensure that in the query phase, we can run a greedy search from any reachable state $s \in S_{\text{reachable}}$ and it will terminate in the attractor state. 
 
-\begin{algorithm}
+The algorithm computes a subregion that covers the maximum number of reachable states that can fit into a hyper-ball defined by $h(s,s_{attractor_i})$. 
+The search maintains a priority queue Open ordered according to $h(s,s_{attractor_i})$. Initially, the predecessors of $\sAttract$ are inserted in the Open (line~\ref{alg:2:open}). For each expanded predecessor, if its valid greedy successor is in $S_{reachable}$, then the predecessor is also labeled as reachable (lines~\ref{alg:2:crit} and~\ref{alg:2:set}). As the priorty used for Open is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). 
+
+
+The search terminates when the search pops a state which is valid but does not have a successor state in $S_{reachable}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to the condition when the reachability search exists an obstacle. At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
+
+
+%Now we could terminate the search as soon as we see the first non-reachable state (say a state entering an obstacle) but then it won't capture the maximum number of reachable states. Instead, we let the region grow through the invalid states and we terminate 
+\begin{algorithm}[t]
 \footnotesize
 \caption{Reachability Search}\label{alg:2}
+
 \begin{algorithmic}[1]
-\Procedure{ComputeReachability}{$\sAttract, r_{\rm max}$}
-\State $S_{reachable} \leftarrow \{\sAttract\}$ \Comment{Reachable set} \label{alg:2:reachable}
-\State $Open \leftarrow \{$Preds($\sAttract$)$\}$  \Comment{priority: min $h(s,\sAttract)$} \label{alg:2:open}
+\Procedure{ComputeReachability}{$\sAttract, r_{\text{max}}$}
+\State $S_{\text{reachable}} \leftarrow \{\sAttract\}$ \Comment{Reachable set} \label{alg:2:reachable}
+\State Open $\leftarrow \{$Preds($\sAttract$)$\}$  \Comment{key: $h(s,\sAttract)$} \label{alg:2:open}
 \State $r_i \leftarrow 0$
 
-\While {$r_i \leq r_{\rm max}$}
-    \State $s \leftarrow$ $Open$.pop()
-    \State $s'_g \leftarrow$ GreedySucc($s$)  \Comment{acc. to some tie breaking criteria}
-    \If {$s'_g$ $\in$ $S_{reachable}$ and Valid(edge(s,$s'_g$))}  \label{alg:2:crit}
-        \State $S_{reachable} \leftarrow S_{reachable} \cup s$  \Comment{$s$ is greedy} \label{alg:2:set}
-    \ElsIf {Valid(s)} \label{alg:2:terminate}
+\While {$r_i \leq r_{\text{max}}$}
+    \State $s \leftarrow$ Open.pop()
+    \State $s'_g \leftarrow \arg \min_{s' \in \text{Succ}(s)} h(s', \sAttract)$ 
+%    \State $s'_g \leftarrow$ GreedySucc($s$) 
+ \Comment{greedy succesor}
+ % acc. to some tie-breaking criteria}
+    \If {$s'_g$ $\in$ $S_{\text{reachable}}$ and Valid(edge(s,$s'_g$))}  \label{alg:2:crit}
+        \State $S_{\text{reachable}} \leftarrow S_{\text{reachable}} \cup \{s\}$  \Comment{$s$ is greedy} \label{alg:2:set}
+    \ElsIf {Valid($s$)} \label{alg:2:terminate}
         \State break
     \EndIf
     \State $r_i \leftarrow h(s, \sAttract)$ \label{alg:2:rad}
-    \For {each $p \in Preds($s$)$}
-        \If {$p \notin S_{reachable}$}    \Comment{avoid reevaluation}
-            \State Insert $p$ in $Open$ with priority $h(p, \sAttract)$
+    \For {each $p \in \text{Preds}(s)$}
+        \If {$p \notin S_{\text{reachable}}$}    \Comment{avoid re-evaluation}
+            \State Insert $p$ in Open with priority $h(p, \sAttract)$
         \EndIf
     \EndFor
 \EndWhile
@@ -285,14 +321,13 @@ The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg
 \end{algorithm}
 
 \subsubsection{Query Phase}
-Once the goal region $G$ is preprocessed, the query phase is straight forward. For any query goal state $s_{goal} \in G$, we lookup for any subregion $R_i$ which covers it. For a region $R_i$ to cover $s_{goal}$, the following condition should hold true.
+For any query goal state $s_{\text{goal}} \in G$, we find s subregion $R_i$ which covers it. Namely, a region $R_i$ for which 
 \begin{center}
-$h(s_{goal}, s_{attractor_i}) < r_i$
+$h(s_{\text{goal}}, \sAttract) < r_i$
 \end{center}
+We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract. The traced path is then stitched to the precomputed path~$\pi_i$. Note that there is no need to perform collision checking during the greedy search which makes the query phase highly efficient.
 
-Then we run a greedy search starting from $s_{goal}$ by simply expanding the successors with the minimum heuriistic $h(s_{goal}, s_{attractor_i})$ values until the search reaches $s_{attractor_i}$. The traced path is then stitched to the precomputed path $\pi_i$, and to get the final path from the $s_{start}$ to $s_{goal}$. An important point to note here is that we don't even have to perform collision checking during the greedy search which makes the query phase even more time efficient.
-
-\subsection {Theoretical Properties}
+\subsection {Theoretical Properties and Computational complexity}
 TODO
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

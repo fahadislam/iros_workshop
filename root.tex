@@ -168,7 +168,7 @@ Let $\calX$ be the configuration space of a robot operating in a static environm
 We are given in advance a start configuration~$\sStart \in \calX$ and some goal region~$G \subset \calX$.
 In the query phase we will be given a multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
-We discretize $\calX$ into a state lattice $\calS$ such that any state $s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$ and make the following assumptions:
+We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$ and make the following assumptions:
 
 \begin{enumerate}
   \item[A1] The goal region~$G \subset \calX$ is a relatively small subset of the full configuration space of the robot. Namely, it is feasible to iterate over all states in $G$.
@@ -291,8 +291,20 @@ Once $V$ gets empty the algorithm starts to search for states which are invalid 
 \end{algorithmic}
 \end{algorithm}
 
+\begin{figure}[tb]
+  \centering
+  	\includegraphics[width=0.3\textwidth]{Alg2.pdf}
+  	% \vspace{-2mm}
+  \caption{
+  Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G$ (grey) containing an obstacle (red).
+  Frontier states  and first state not in $R_i$ are depicted by circles and a cross, respectively.
+}
+   	\label{fig:alg2}
+ \vspace{-3mm}
+\end{figure}
+
 \paragraph*{Reachability Search}
-The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2}) which we call a ``Reachability Search''. The algorithm maintains a set of \emph{reachable} states $S_{\text{reachable}}$ for which property P1 holds. 
+The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2} and Fig.~\ref{fig:alg2}) which we call a ``Reachability Search''. The algorithm maintains a set of \emph{reachable} states $S_{\text{reachable}}$ for which property P1 holds. 
 Namely, the greedy successor\footnote{A state $s' \in \text{Succ}(s)$ is said to be a \emph{greedy} successor according to some heuristic $h(\cdot)$ if it has the minimal $h$-value  among all successors.} $s'$ of every reachable state $s \in S_{\text{reachable}}$ is also a reachable state, except for the attractor state \sAttract. 
 This will ensure that in the query phase, we can run a greedy search from any reachable state $s \in S_{\text{reachable}}$ and it will terminate in the attractor state. 
 

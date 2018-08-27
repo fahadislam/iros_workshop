@@ -91,13 +91,13 @@ maxim@cs.cmu.edu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-This electronic document is a “live” template. The various components of your paper [title, text, heads, etc.] are already defined on the style sheet, as illustrated by the portions given in this document.
+We consider the problem of solving high-dimensional motion planning tasks in real-time for the settings where the tasks are highly repetitive in terms of the start and goal locations. Preprocessing-based approaches prove to be very beneficial in such settings. They analyze the state-space offline to generate some auxiliary information which can then be used in the query phase to gain speedups. While these approaches boost the performance, they come with query-time/memory trade-off making them impractical for higher dimensional spaces. We propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluated our method on a 7-DOF robot arm.
 
 \end{abstract}
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
+
 %1. What is the problem?
 Consider the problem of a robot picking up objects from a high-speed conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
 Similarly, consider a robot given the task of stock replenishment---moving in a supermarket and loading items from a cart it carries to half-empty shelves.
@@ -137,6 +137,17 @@ subgoal graphs~\cite{UK17,UK18} and to real-time planning~\cite{KL06,KS09,K90}.
 However, in the former, the entire configuration space is preprocessed in order to efficiently answer queries between \emph{any} pair of states which deems it applicable only to low-dimensional spaces.
 Similarly, in the latter, to provided guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
 
+\begin{figure}[tb]
+  \centering
+    \includegraphics[width=0.35\textwidth]{PR2.jpg}
+    % \vspace{-2mm}
+  \caption{
+  Motivating scenario---a robot (PR2) picking up objects from a conveyor belt.
+}
+    \label{fig:PR2}
+ \vspace{-3mm}
+\end{figure}
+
 %5. What's missing?
 
 %6. What is our ONE key insight?
@@ -149,20 +160,6 @@ and show
 {\color{blue} what do we show?}
 %8. What are our contributions?
 %9. What are our limitations?
-
-
-
-\begin{figure}[tb]
-  \centering
-  	\includegraphics[width=0.35\textwidth]{PR2.jpg}
-  	% \vspace{-2mm}
-  \caption{
-  Motivating scenario---a robot (PR2) picking up objects from a conveyor belt.
-}
-   	\label{fig:PR2}
- \vspace{-3mm}
-\end{figure}
-
 
 \section{Algorithm Framework}
 %In this section we describe our algorithmic framework. We start (Sec.~\ref{sec:pdef}) by formally defining our problem and continue...

@@ -376,13 +376,13 @@ We then run a greedy search starting from $s_{\text{goal}}$ by iteratively findi
 %TODO
 
 \section{Evaluation}
-We evaluated our algorithm on the PR2 robot for the single-arm (7 DOF) planning problem. The task here is to pick up objects from the conveyor belt and put them in a bin (see Fig.~\ref{fig:sim}). In general, we define the goal region $G$ as the state-space confined within \textit{task-space} boundaries for the end-effector.\\
-{$\{(x_{\text{min}}, x_{\text{max}}), (y_{\text{min}}, y_{\text{max}}), (z_{\text{min}}, z_{\text{max}}), (\text{roll}_{\text{min}}, \text{roll}_{\text{max}}),\\ (\text{pitch}_{\text{min}}, \text{pitch}_{\text{max}}), (\text{yaw}_{\text{min}}, \text{yaw}_{\text{max}})\}$}
+We evaluated our algorithm on the PR2 robot for the single-arm (7 DOF) planning problem. The task here is to pick up objects from the conveyor belt and put them in a bin (see Fig.~\ref{fig:sim}). We define the goal region $G$ as the state-space confined within \textit{task-space} boundaries for the end-effector in terms of position and orientation. It is selected as per the task at hand.
 
-By leveraging the domain knowledge, we can drastically limit the size of $G$. The objects coming on the conveyor could be positioned at any x, y and orientation which constrains the grasp poses to have fixed $z$, roll and pitch. Hench we define the task-space boundaries only in $x$, $y$ and yaw. The $y$ could be computed considering the speed of the conveyor and the estimated trajectory execution time.
+We can also provide bounds on the query time. The worst case query time is bounded by the radius of the largest subregion and the total number of subregions that cover $G$. We can report it by adding the lookup time for iterating over all the regions, and the time that the greedy search takes to reach the attractor from a goal state lying on the boundary of the largest subregion.
 
 \subsection{Results}
-We compared our approach against \textsf{PRM} algorithm for success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. Algorithm~\ref{alg:1} took 1361 seconds and returned 1329 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in $G$ to $s_{\text{start}}$ were precomputed. In the query phase if \textsf{PRM}'s connect operation fails for a query $s_{\text{goal}}$, we consider it a failure. We also bootstrap \textsf{PRM} with 20 goal states from $G$. 
+We compared our approach against \textsf{PRM} algorithm for success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. Algorithm~\ref{alg:1} took 950 seconds and returned 898 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in $G$ to $s_{\text{start}}$ were precomputed. In the query phase if \textsf{PRM}'s connect operation fails for a query $s_{\text{goal}}$, we consider it a failure. We also bootstrap \textsf{PRM} with 20 goal states from $G$. 
+
 
 \begin{figure}[tb]
   \centering
@@ -400,8 +400,9 @@ We compared our approach against \textsf{PRM} algorithm for success rate and pla
     \begin{tabular}{ l c c }
        & \textsf{PRM} & Our Method \\ 
      \hline
-     Mean Planning time(ms) & 6.84 & 0.55 \\  
-     Successes & 85 & 100 %99
+     Mean Planning time (ms) & 6.84 & 0.55 \\  
+     Success rate & 90 & 100 \\
+     Memory usage (Mb) & - & 0.2 \\
     \end{tabular}
     \caption{Experimental results comparing our method with PRM.}
     \label{tab:stats}

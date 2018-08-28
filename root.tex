@@ -91,7 +91,13 @@ maxim@cs.cmu.edu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-We consider the problem of solving high-dimensional motion planning tasks in real-time for the settings where the tasks are highly repetitive in terms of the start and goal locations. Preprocessing-based approaches prove to be very beneficial in such settings. They analyze the state-space offline to generate some auxiliary information which can then be used in the query phase to gain speedups. While these approaches boost the performance, they come with query-time/memory trade-off making them impractical for higher dimensional spaces. We propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluated our method on a 7-DOF robot arm.
+We consider the problem of solving high-dimensional motion planning tasks in real-time for highly-repetitive tasks. 
+Preprocessing-based approaches prove to be very beneficial in such settings---they analyze the state-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
+While these approaches boost the performance, 
+they typically either require a huge memory footprint to store multiple paths and are only applicable for low-dimensional spaces 
+or have planning unacceptable planning times for our setting.
+Furthermore, as far as we are aware of, non of the general-purpose algorithms come with \emph{provable} guarantees on the maximal query time.
+We propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluated our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm and a provable maximum query time of less than {\color{blue} XXX} miliseconds.
 
 \end{abstract}
 
@@ -117,7 +123,7 @@ Thus, a natural approach is to preprocess the environment in an offline phase to
 One way to preprocess the environment is using the \textsf{PRM} algorithm~\cite{kavraki1996probabilistic}.
 Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the source and target to the roadmap. 
 Query times can be significantly sped up by further preprocessing the roadmaps using landmarks~\cite{paden2017landmark}.
-Unfortunately, there is no guarantee that the a query can be connected to the roadmap as \textsf{PRM} only provides \emph{asymptotic} guarantees~\cite{KKL98}.
+Unfortunately, there is no guarantee that a query can be connected to the roadmap as \textsf{PRM} only provides \emph{asymptotic} guarantees~\cite{KKL98}.
 Furthermore, this connecting phase requires running a collision-detection algorithm which is typically considered the computational bottleneck in many motion-planning algorithms~\cite{L06}.
 
 Recently, Lehner and  Albu{-}Sch{\"{a}}ffer~\cite{LA18} suggest the repetition roadmap to extend the \textsf{PRM} for the case of multiple highly-similar scenarios.
@@ -139,25 +145,25 @@ Similarly, in the latter, to provided guarantees on planning time the search onl
 
 \begin{figure}[tb]
   \centering
-    \includegraphics[width=0.35\textwidth]{PR2.jpg}
+    \includegraphics[width=0.25\textwidth]{PR2.jpg}
     % \vspace{-2mm}
   \caption{
   Motivating scenario---a robot (PR2) picking up objects from a conveyor belt.
 }
     \label{fig:PR2}
- \vspace{-3mm}
+ \vspace{-6mm}
 \end{figure}
 
 %5. What's missing?
 
 %6. What is our ONE key insight?
 Our key insight is to combine a precomputed library~$\calL$ of paths between \emph{several} start and target configurations together with a method to connect \emph{any} start and target configuration to a path in~$\calL$ \emph{without} having to perform collision detection.
-This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which are in the order of milliseconds for a seven DoF manipulator.
+This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which are in the order of milliseconds for a seven DOF manipulator.
 
 %7. How do we compare against the state of the art?
 We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2})
-and show
-{\color{blue} what do we show?}
+and demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with little memory footprint and guaranteeing a maximal query time of less than {\color{blue} XXX} miliseconds.
+
 %8. What are our contributions?
 %9. What are our limitations?
 
@@ -188,7 +194,7 @@ However, storing a path from $\sStart$ to each state in $G$ is infeasible.
   % $G$ is defined as a 6-dimensional window around some nominal goal pose in the task space, $q = (\textit{x, y, z, roll, pitch, yaw})$.
 \end{enumerate}
 
-These assumptions allow us to establish strong theoretical properties regarding the efficiency of our planner. Namely that
+These assumptions allow us to establish strong theoretical properties regarding the efficiency of our planner. Namely, that
 within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G$. Proofs are omitted due to lack of space. 
 
 \subsection{Key Idea}
@@ -201,7 +207,7 @@ These regions are constructed in such a way that the following two properties ho
 \begin{enumerate}
   \item[P1] For any goal state $s_{\text{goal}} \in R_i \cap G$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sStart$ will result in a collision-free path to \sAttract.
   \item[P2] The union of all the subregions completely cover $G$. 
-  		Namely, $\forall s \in \calL \cap G, \exists R_i \ s.t. \ s \in R_i$.
+  		Namely, $\forall s \in \calS \cap G, \exists R_i \ s.t. \ s \in R_i$.
   		%In other words, any query state $\sGoal \in G$ will fall in atleast one of the subregions.
 \end{enumerate}
 
@@ -227,7 +233,7 @@ The search terminates with the region's radius $r_i$ and a list of frontier stat
 The valid and invalid states are then added to $V$ and $I$, respectively (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}).
 
 
-Once $V$ gets empty the algorithm starts to search for states which are invalid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G$ is covered under atleast one subregion.
+Once $V$ gets empty the algorithm starts to search for states which are invalid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G$ is covered under at least one subregion.
 
 %{\color{blue} What is SearchValidUncoveredStates?.}
 
@@ -263,7 +269,7 @@ $\calR, \calL$
     \While {$V$ and $I$ are not empty}
         \While {$V$ is not empty}
           \State $s \leftarrow V.\text{pop}()$ \label{alg:1:pop}
-            \If {$\nexists R_i \ s.t. \ s \in R_i$ }  \label{alg:1:discard}
+            \If {$\nexists R \in \calR$  s.t. $s \in R$ }  \label{alg:1:discard}
             \Comment{$s$ is not covered}
 				\State $\sAttract \leftarrow s$                
                 \State $\pi_i$ = \textsc{PlanPath}($\sAttract , \sStart$);
@@ -283,7 +289,7 @@ $\calR, \calL$
         
         \While {$I$ is not empty} \label{alg:1:iv_loop}
             \State $s$ $\leftarrow$ $I.pop()$
-			\If {$\neq R \in \calR$ s.t. $s \in R$ }      \Comment{$s$ is not covered}
+			\If {$\nexists R \in \calR$ s.t. $s \in R$ }      \Comment{$s$ is not covered}
 \State $(X, r)$ $\leftarrow$ \textsc{SearchValidUncoveredStates}($s$)
 %                \State $(X, r)$ $\leftarrow$ \textsc{SearchValidUncoveredStates}($s, r_{\text{max}}$)
                 \State $\hat{R}_i$ $\leftarrow$ $(s,r)$;
@@ -306,14 +312,14 @@ $\calR, \calL$
 
 \begin{figure}[tb]
   \centering
-  	\includegraphics[width=0.3\textwidth]{Alg2.pdf}
+  	\includegraphics[width=0.25\textwidth]{Alg2.pdf}
   	% \vspace{-2mm}
   \caption{
   Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G$ (grey) containing an obstacle (red).
   Frontier states  and first state not in $R_i$ are depicted by circles and a cross, respectively.
 }
    	\label{fig:alg2}
- \vspace{-3mm}
+ \vspace{-5mm}
 \end{figure}
 
 \paragraph*{Reachability Search}
@@ -370,23 +376,30 @@ The algorithm terminates when the search pops a state which is valid but does no
 \subsubsection{Query Phase}
 For any query goal state $s_{\text{goal}} \in G$, we find a subregion $R_i \in \calR$ which covers it. Namely, a region~$R_i$ for which 
 $h(s_{\text{goal}}, \sAttract) < r_i$.
-We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract. The traced path is then stitched to the corresponding precomputed path~$\pi_i \in \calL$. Note that and no point  do we need to perform collision checking which makes the query phase highly efficient.
+We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract. The traced path is then stitched to the corresponding precomputed path~$\pi_i \in \calL$. 
+Note that at no point  do we need to perform collision checking in the query phase.
+% which makes the query phase highly efficient.
 
 %\subsection {Theoretical Properties and Computational complexity}
 %TODO
 
 \section{Evaluation}
-We evaluated our algorithm on the PR2 robot for the single-arm (7 DOF) planning problem. The task here is to pick up objects from the conveyor belt and put them in a bin (see Fig.~\ref{fig:sim}). We define the goal region $G$ as the state-space confined within \textit{task-space} boundaries for the end-effector in terms of position and orientation. It is selected as per the task at hand.
+We evaluated our algorithm on a PR2 for the single-arm (7 DOF) planning problem depicted in Fig.~\ref{fig:sim}. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
+We define the task-relevant goal region~$G$ as the state-space confined within \textit{task-space} boundaries for the end-effector in terms of position and orientation. 
+%It is selected as per the task at hand.
 
-We can also provide bounds on the query time. The worst case query time is bounded by the radius of the largest subregion and the total number of subregions that cover $G$. We can report it by adding the lookup time for iterating over all the regions, and the time that the greedy search takes to reach the attractor from a goal state lying on the boundary of the largest subregion.
+As mentioned, our method allows to guarantee bounds on the query time. The worst-case query time is bounded by the radius of the largest subregion and the total number of subregions that cover $G$. We can report it by adding the lookup time for iterating over all the regions, and the time that the greedy search takes to reach the attractor from a goal state lying on the boundary of the largest subregion.
 
 \subsection{Results}
-We compared our approach against \textsf{PRM} algorithm for success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. Algorithm~\ref{alg:1} took 950 seconds and returned 898 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in $G$ to $s_{\text{start}}$ were precomputed. In the query phase if \textsf{PRM}'s connect operation fails for a query $s_{\text{goal}}$, we consider it a failure. We also bootstrap \textsf{PRM} with 20 goal states from $G$. 
+We compared our approach with the \textsf{PRM} algorithm in terms of success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. 
+Preprocessing (Alg.~\ref{alg:1}) took 950 seconds and returned 898 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in $G$ to $s_{\text{start}}$ were precomputed. 
+In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
+We also bootstrap \textsf{PRM} with 20 goal states from $G$. 
 
 
 \begin{figure}[tb]
   \centering
-    \includegraphics[width=0.35\textwidth]{simulation2.png}
+    \includegraphics[width=0.325\textwidth]{simulation2.png}
     % \vspace{-2mm}
   \caption{
   Experimental setup.
@@ -398,21 +411,21 @@ We compared our approach against \textsf{PRM} algorithm for success rate and pla
 \begin{table}
   \begin{center}
     \begin{tabular}{ l c c }
-       & \textsf{PRM} & Our Method \\ 
+       & \textsf{PRM} & Our method \\ 
      \hline
-     Mean Planning time (ms) & 6.84 & 0.55 \\  
-     Success rate & 90 & 100 \\
-     Memory usage (Mb) & - & 0.2 \\
+     Mean Planning time [ms]& 6.84 	& 0.55 \\  
+     Success rate [$\%$]	& 90 	& 100 \\
+     Memory usage [Mb] 		& - 	& 0.2 \\
     \end{tabular}
-    \caption{Experimental results comparing our method with PRM.}
+    \caption{Experimental results comparing our method with \textsf{PRM}.}
     \label{tab:stats}
   \end{center}
 \end{table}
 
-\section{Conclusion}
-Proofs
-
-Computational complexity
+%\section{Conclusion}
+%Proofs
+%
+%Computational complexity
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{plain}

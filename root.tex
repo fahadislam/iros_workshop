@@ -91,11 +91,14 @@ maxim@cs.cmu.edu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-In manufacturing industry, the robots have to perform highly repetitive manipulation tasks in structured environments. Motion planning in such environments need to be extremely fast to be able to meet high efficiency requirements. Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the state-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
+In manufacturing, robots often have to perform highly-repetitive manipulation tasks in structured environments. 
+In this work we are interested in settings where the tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
+Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the configuration-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is impractical.
 Moreover, as far as we are aware of, non of the general-purpose algorithms come with \emph{provable} guarantees on the maximal query time.
-We propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than 4 milliseconds.
+%
+Thus, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than 4 milliseconds.
 
 \end{abstract}
 
@@ -417,7 +420,7 @@ We define the task-relevant goal region~$G$ by bounding the position and orienta
 
 %\subsection{Results}
 We compared our approach with the \textsf{PRM} algorithm in terms of success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. 
-Preprocessing (Alg.~\ref{alg:1}) took 1128 seconds and returned 1490 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in $G$ to $s_{\text{start}}$ were precomputed. 
+Preprocessing (Alg.~\ref{alg:1}) took 1,128 seconds and returned 1,490 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in~$G$ to $s_{\text{start}}$ were precomputed. 
 In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
 We also bootstrap \textsf{PRM} with 20 goal states from $G$. 
 

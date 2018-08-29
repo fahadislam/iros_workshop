@@ -91,12 +91,11 @@ maxim@cs.cmu.edu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-We consider the problem of solving high-dimensional motion-planning tasks in real-time for highly-repetitive tasks. 
-Preprocessing-based approaches prove to be very beneficial in such settings---they analyze the state-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
+In manufacturing industry, the robots have to perform highly repetitive manipulation tasks in structured environments. Motion planning in such environments need to be extremely fast to be able to meet high efficiency requirements. Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the state-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is impractical.
 Moreover, as far as we are aware of, non of the general-purpose algorithms come with \emph{provable} guarantees on the maximal query time.
-We propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than {\color{blue} XXX} miliseconds.
+We propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than 4 milliseconds.
 
 \end{abstract}
 
@@ -140,7 +139,7 @@ Unfortunately, this approach also cannot provide any of the guarantees required 
 Our work bares resemblance to previous work on 
 subgoal graphs~\cite{UK17,UK18} and to real-time planning~\cite{KL06,KS09,K90}.
 However, in the former, the entire configuration space is preprocessed in order to efficiently answer queries between \emph{any} pair of states which deems it applicable only to low-dimensional spaces.
-Similarly, in the latter, to provided guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
+Similarly, in the latter, to provide guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
 
 \begin{figure}[tb]
   \centering
@@ -161,7 +160,7 @@ This insight allows us to provide \emph{provable bounds} on the time to solve mo
 
 %7. How do we compare against the state of the art?
 We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2} and~\ref{fig:sim})
-and demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with little memory footprint and while guaranteeing a maximal query time of less than {\color{blue} XXX} miliseconds.
+and demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a little memory footprint if 0.2 Mbs and while guaranteeing a maximal query time of less than 4 milliseconds.
 
 %8. What are our contributions?
 %9. What are our limitations?
@@ -323,14 +322,14 @@ $\calR, \calL$
 
 \begin{table}[tb]
   \begin{center}
-    \begin{tabular}{ l c c }
-       & \textsf{PRM} & Our method \\ 
+    \begin{tabular}{ l | c c c c}
+       & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & Our method \\
      \hline
-     Mean Planning time [ms]& 6.84 	& 0.55 \\  
-     Success rate [$\%$]	& 90 	& 100 \\
-     Memory usage [Mb] 		& - 	& 0.2 \\
+     Mean Planning time [ms]& - & - & - & 0.48 \\
+     Worst-case planning time [ms]& - & - & - & 1.01 \\
+     Success rate [$\%$]	& - & - & - & 100 \\
     \end{tabular}
-    \caption{Experimental results comparing our method with \textsf{PRM}.}
+    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the results for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation T.}
     \label{tab:stats}
   \end{center}
 %  \vspace{-3mm}
@@ -418,7 +417,7 @@ We define the task-relevant goal region~$G$ by bounding the position and orienta
 
 %\subsection{Results}
 We compared our approach with the \textsf{PRM} algorithm in terms of success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. 
-Preprocessing (Alg.~\ref{alg:1}) took 950 seconds and returned 898 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in $G$ to $s_{\text{start}}$ were precomputed. 
+Preprocessing (Alg.~\ref{alg:1}) took 1128 seconds and returned 1490 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in $G$ to $s_{\text{start}}$ were precomputed. 
 In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
 We also bootstrap \textsf{PRM} with 20 goal states from $G$. 
 

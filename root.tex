@@ -319,14 +319,14 @@ $\calR, \calL$
 
 \begin{figure}[tb]
   \centering
-  	\includegraphics[width=0.25\textwidth]{Alg2.pdf}
+  	\includegraphics[width=0.20\textwidth]{Alg2.pdf}
   	% \vspace{-2mm}
   \caption{
   Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G_S$ (grey) containing an obstacle (red).
   Frontier states  and first state not in $R_i$ are depicted by circles and a cross, respectively.
 }
    	\label{fig:alg2}
- \vspace{-5mm}
+ \vspace{-6mm}
 \end{figure}
 
 
@@ -420,10 +420,10 @@ Thus, after the preprocessing stage the maximal query time can be computed.
        % Success rate [$\%$] & 90 & - & - & 100 \\
       \end{tabular}
   }
-    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the mean/worst-case planning times and success rates for our method and for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,128 seconds).}
+    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the mean/worst-case planning times and success rates for our method and for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 984 seconds).}
     \label{tab:stats}
   % \end{center}
-%  \vspace{-3mm}
+ \vspace{-6mm}
 \end{table}
 
 We evaluated our algorithm by getting some preliminary results on the PR2 robot for the single-arm (7 DOF) planning problem depicted in Fig.~\ref{fig:sim}. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
@@ -437,17 +437,17 @@ We compared our approach with the \textsf{PRM} algorithm in terms of success rat
 Preprocessing (Alg.~\ref{alg:1}) took 984 seconds and returned 1,865 subregions. For a fair comparision, for \textsf{PRM} the paths from all the nodes in~$G$ to $s_{\text{start}}$ were precomputed. 
 In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
 We also bootstrap \textsf{PRM} with 20 goal states from~$G$. Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.
-
+ \vspace{-5mm}
 
 \begin{figure}[tb]
   \centering
-    \includegraphics[width=0.325\textwidth]{simulation2.png}
+    \includegraphics[width=0.20\textwidth]{simulation3.png}
     % \vspace{-2mm}
   \caption{
-  Experimental setup.
+  Experimental setup---The grid (in blue) depict the 3D projection of the goal region $G_S$.
 }
     \label{fig:sim}
- \vspace{-5mm}
+ \vspace{-8mm}
 \end{figure}
 
 

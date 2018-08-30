@@ -176,10 +176,12 @@ Let $\calX$ be the configuration space of a robot operating in a static environm
 We are given in advance a start configuration~$\sStart \in \calX$ and some goal region~$G \subset \calX$.
 In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
-We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$. {\color{blue}{We define a discretized goal region $G_S \leftarrow S \cap G$}} and make the following assumptions:
+We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$
+and set $G_S := S \cap G$ to be the states that reside in the goal region.
+We make the following assumptions:
 
 \begin{enumerate}
-  \item[A1] $G_S$ is a relatively small subset of the $S$. Namely, it is feasible to exhaustively iterate over all states in $G_S$.
+  \item[A1] $G_S$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_S$.
 However, storing a path from $\sStart$ to each state in $G_S$ is infeasible.
   
   \item[A2] The planner has access to a $\textit{weakly-monotonic}$ heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ such that $\forall s_1, s_2  \in G_S$ where $s_1 \neq s_2 \neq s_{goal}$, it holds that,
@@ -188,7 +190,7 @@ However, storing a path from $\sStart$ to each state in $G_S$ is infeasible.
     $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \quad \wedge s'_1\in G_S $. 
   \end{center}
   Namely, for any distinct pair of states ($s_1, s_2$) in $G_S$, at least one of $s_1$'s successors (also belonging to $G_S$) must have a heuristic value less than or equal to its heuristic value. 
-	Note that this assumption does not imply  that~$G_S$ is collision free.
+	Note that this assumption does not imply  that~$G$ is entirely collision free.
 %	
 %	
 %  This property should hold assuming that all the edges in $G$ are traversable i.e., they have finite costs.
@@ -201,7 +203,8 @@ within a known bounded time, we can compute a collision-free path from $\sStart$
 
 \subsection{Key Idea}
 Our planner comprises of a preprocessing and a query phase. 
-In the preprocessing phase, $G_S$ is decomposed into a finite  set of (possibly overlapping) subregions $\calR$.
+In the preprocessing phase, $G_S$ is decomposed into two finite  sets of (possibly overlapping) subregions $\calR$ and~$\hat{\calR}$.
+Subregions in $\hat{\calR}$ only contain states that are in collision.
 Each subregion $R_i \in \calR$ is a hyper-ball defined using a center which we refer to as the ``attractor state''~
 \sAttract and a radius $r_i$.
 % centered around what we call the $attractor$ states $s_{attractor_i}$ and radii $r_i$, where $i$ = 1 to $n$. 
@@ -209,7 +212,7 @@ These regions are constructed in such a way that the following two properties ho
 \begin{enumerate}
   \item[P1] For any goal state $s_{\text{goal}} \in R_i \cap G_S$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sStart$ will result in a collision-free path to \sAttract.
   \item[P2] The union of all the subregions completely cover $G_S$. 
-  		Namely, $\forall s \in G_S, \exists R_i \ s.t. \ s \in R_i$.
+  		Namely, $\forall s \in G_S, \exists R \in \calR \cup \hat{\calR} \ s.t. \ s \in R$.
   		%In other words, any query state $\sGoal \in G$ will fall in atleast one of the subregions.
 \end{enumerate}
 
@@ -266,6 +269,8 @@ $\calR, \calL$
   		 $\calL = \emptyset$
   		 \hspace{2mm} 
   		 $\calR = \emptyset$
+  		 \hspace{2mm} 
+  		 $\hat{\calR} = \emptyset$
   		 
   \vspace{2mm}
     \While {$V$ and $I$ are not empty}
@@ -291,12 +296,12 @@ $\calR, \calL$
         
         \While {$I$ is not empty} \label{alg:1:iv_loop}
             \State $s$ $\leftarrow$ $I.pop()$
-			\If {$\nexists R \in \calR$ s.t. $s \in R$ }      \Comment{$s$ is not covered}
+			\If {$\nexists R \in \calR \cup \hat{\calR}$ s.t. $s \in R$ }      \Comment{$s$ is not covered}
 \State $(X, r)$ $\leftarrow$ \textsc{SearchValidUncoveredStates}($s$)
 %                \State $(X, r)$ $\leftarrow$ \textsc{SearchValidUncoveredStates}($s, r_{\text{max}}$)
-                \State $\hat{R}_i$ $\leftarrow$ $(s,r)$;
+                \State $\hat{R}$ $\leftarrow$ $(s,r)$;
 				\hspace{2mm}
-				$\calR \leftarrow \calR \cup \{ \hat{R}_i \}$ \Comment{invalid region}  \label{alg:1:iv_region}
+				$\hat{\calR} \leftarrow \hat{\calR} \cup \{ \hat{R} \}$ \Comment{invalid region}  \label{alg:1:iv_region}
                 \If {$X$ is not empty}  \Comment{no valid state found}  \label{alg:1:x_states}
                     \State insert $X$ in $V$
                     \State \textbf{break} \label{alg:1:break}
@@ -324,23 +329,6 @@ $\calR, \calL$
  \vspace{-5mm}
 \end{figure}
 
-\begin{table}[tb]
-  % \begin{center}
-    \resizebox{\linewidth}{!}{%
-      \begin{tabular}{ l | c c c c}
-         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & Our method \\
-       \hline
-       Planning time [ms]& 6.3 (11.6) & 6.6 (11.6) & 8.6 (13.0) & 0.48 (1.01)\\
-       % Planning time [ms]& 6.8 (12.2) & 7.2 (18.0) & - (-) & 0.48 (1.01)\\
-       Success rate [$\%$] & 92 & 97 & 100 & 100 \\
-       % Success rate [$\%$] & 90 & - & - & 100 \\
-      \end{tabular}
-  }
-    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the mean/worst-case planning times and success rates for our method and for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,128 seconds).}
-    \label{tab:stats}
-  % \end{center}
-%  \vspace{-3mm}
-\end{table}
 
 % 1865 regions 984 secs
 
@@ -420,6 +408,24 @@ Thus, after the preprocessing stage the maximal query time can be computed.
 %TODO
 
 \section{Evaluation}
+\begin{table}[tb]
+  % \begin{center}
+    \resizebox{\linewidth}{!}{%
+      \begin{tabular}{ l | c c c c}
+         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & Our method \\
+       \hline
+       Planning time [ms]& 6.3 (11.6) & 6.6 (11.6) & 8.6 (13.0) & 0.48 (1.01)\\
+       % Planning time [ms]& 6.8 (12.2) & 7.2 (18.0) & - (-) & 0.48 (1.01)\\
+       Success rate [$\%$] & 92 & 97 & 100 & 100 \\
+       % Success rate [$\%$] & 90 & - & - & 100 \\
+      \end{tabular}
+  }
+    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the mean/worst-case planning times and success rates for our method and for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,128 seconds).}
+    \label{tab:stats}
+  % \end{center}
+%  \vspace{-3mm}
+\end{table}
+
 We evaluated our algorithm by getting some preliminary results on the PR2 robot for the single-arm (7 DOF) planning problem depicted in Fig.~\ref{fig:sim}. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
 We define the task-relevant goal region~$G$ by bounding the position and orientation of the end effector. 
 
@@ -430,7 +436,7 @@ We define the task-relevant goal region~$G$ by bounding the position and orienta
 We compared our approach with the \textsf{PRM} algorithm in terms of success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. 
 Preprocessing (Alg.~\ref{alg:1}) took 984 seconds and returned 1,865 subregions. For a fair comparision, for \textsf{PRM} the paths from all the nodes in~$G$ to $s_{\text{start}}$ were precomputed. 
 In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
-We also bootstrap \textsf{PRM} with 20 goal states from $G$. Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.
+We also bootstrap \textsf{PRM} with 20 goal states from~$G$. Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.
 
 
 \begin{figure}[tb]
@@ -441,7 +447,7 @@ We also bootstrap \textsf{PRM} with 20 goal states from $G$. Note that the worst
   Experimental setup.
 }
     \label{fig:sim}
- \vspace{-3mm}
+ \vspace{-5mm}
 \end{figure}
 
 

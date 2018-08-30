@@ -34,6 +34,7 @@
 \usepackage{xspace}
 \usepackage{wrapfig}
 \usepackage{color}
+\usepackage{graphicx}
 
 \usepackage{algorithm}
 \usepackage{algorithmicx}
@@ -92,13 +93,13 @@ maxim@cs.cmu.edu
 \begin{abstract}
 
 In manufacturing, robots often have to perform highly-repetitive manipulation tasks in structured environments. 
-In this work we are interested in settings where the tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
+In this work we are interested in the settings where the tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
 Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the configuration-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is impractical.
 Moreover, as far as we are aware of, non of the general-purpose algorithms come with \emph{provable} guarantees on the maximal query time.
 %
-Thus, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than 4 milliseconds.
+To this end, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than 4 milliseconds.
 
 \end{abstract}
 
@@ -109,11 +110,11 @@ Thus, we propose a preprocessing-based method that provides provable bounds on t
 Consider the problem of a robot picking up objects from a high-speed conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
 Similarly, consider a robot given the task of stock replenishment---moving in a supermarket and loading items from a cart it carries to half-empty shelves.
 %2. Why is it relevant?
-These problems are examples of repetitive tasks performed by (possibly highly articulated) robots in static environments where the start and target of each repetitive task is similar, yet not identical, to previous tasks.
-Difference in the exact start and target position may be due to uncertainty in the environment (objects placed on different parts of the conveyor belt or in different orientation) or due to highly-similar tasks (objects placed in similar positions on a shelf).
+These problems are examples of repetitive tasks performed by (possibly highly articulated) robots in static environments where the start and goal of each repetitive task is similar, yet not identical, to previous tasks.
+Difference in the exact start and goal position may be due to uncertainty in the environment (objects placed on different parts of the conveyor belt or in different orientation) or due to highly-similar tasks (objects placed in similar positions on a shelf).
 
 %3. Why is it hard?
-As the set of possible start and target locations may be large, caching pre-computed paths for all these queries in advance is unmanageable. 
+As the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable. 
 Clearly, once a task is presented to the robot, it can compute a desired path online.
 However, this may incur large online planning times that may be unacceptable in many settings.
 For example, in our conveyor-belt setting, reducing the planning time immediately corresponds to faster unloading capabilities. 
@@ -122,7 +123,7 @@ Thus, a natural approach is to preprocess the environment in an offline phase to
 
 %4. What have others done?
 One way to preprocess the environment is using the \textsf{PRM} algorithm~\cite{kavraki1996probabilistic}.
-Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the source and target to the roadmap. 
+Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the source and goal to the roadmap. 
 Query times can be significantly sped up by further preprocessing the roadmaps using landmarks~\cite{paden2017landmark}.
 Unfortunately, there is no guarantee that a query can be connected to the roadmap as \textsf{PRM} only provides \emph{asymptotic} guarantees~\cite{KKL98}.
 Furthermore, this connecting phase requires running a collision-detection algorithm which is typically considered the computational bottleneck in many motion-planning algorithms~\cite{L06}.
@@ -158,8 +159,8 @@ Similarly, in the latter, to provide guarantees on planning time the search only
 %5. What's missing?
 
 %6. What is our ONE key insight?
-Our key insight is to combine a precomputed library~$\calL$ of paths between \emph{several} start and target configurations together with a method to connect \emph{any} start and target configuration to a path in~$\calL$ \emph{without} having to perform collision detection.
-This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which are in the order of milliseconds for a seven DOF manipulator.
+Our key insight is to combine a precomputed library~$\calL$ of paths between \emph{several} start and goal configurations together with a method to connect \emph{any} start and goal configuration to a path in~$\calL$ \emph{without} having to perform collision detection.
+This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which is in the order of milliseconds for a seven DOF manipulator.
 
 %7. How do we compare against the state of the art?
 We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2} and~\ref{fig:sim})
@@ -175,19 +176,19 @@ Let $\calX$ be the configuration space of a robot operating in a static environm
 We are given in advance a start configuration~$\sStart \in \calX$ and some goal region~$G \subset \calX$.
 In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
-We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$ and make the following assumptions:
+We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$. {\color{blue}{We define a discretized goal region $G_S \leftarrow S \cap G$}} and make the following assumptions:
 
 \begin{enumerate}
-  \item[A1] The goal region~$G \subset \calX$ is a relatively small subset of the full configuration space of the robot. Namely, it is feasible to exhaustively iterate over all states in $G$.
-However, storing a path from $\sStart$ to each state in $G$ is infeasible.
+  \item[A1] $G_S$ is a relatively small subset of the $S$. Namely, it is feasible to exhaustively iterate over all states in $G_S$.
+However, storing a path from $\sStart$ to each state in $G_S$ is infeasible.
   
-  \item[A2] The planner has access to a $\textit{weakly-monotonic}$ heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ such that $\forall s_1, s_2  \in G$ where $s_1 \neq s_2$ it holds that,
+  \item[A2] The planner has access to a $\textit{weakly-monotonic}$ heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ such that $\forall s_1, s_2  \in G_S$ where $s_1 \neq s_2 \neq s_{goal}$, it holds that,
 
   \begin{center}
-    $h(s_1, s_2) \geq \min\limits_{\forall s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \quad \forall s_1'\in G $. 
+    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \quad \wedge s'_1\in G_S $. 
   \end{center}
-  Namely, for any distinct pair of states ($s_1, s_2$) in $G$, at least one of $s_1$'s successors (also belonging to $G$) must have a heuristic value less than or equal to its heuristic value. 
-	Note that this assumption does not imply  that~$G$ is collision free.
+  Namely, for any distinct pair of states ($s_1, s_2$) in $G_S$, at least one of $s_1$'s successors (also belonging to $G_S$) must have a heuristic value less than or equal to its heuristic value. 
+	Note that this assumption does not imply  that~$G_S$ is collision free.
 %	
 %	
 %  This property should hold assuming that all the edges in $G$ are traversable i.e., they have finite costs.
@@ -196,19 +197,19 @@ However, storing a path from $\sStart$ to each state in $G$ is infeasible.
 \end{enumerate}
 
 These assumptions allow us to establish strong theoretical properties regarding the efficiency of our planner. Namely, that
-within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G$. Proofs are omitted due to lack of space. 
+within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_S$. Proofs are omitted due to lack of space. 
 
 \subsection{Key Idea}
 Our planner comprises of a preprocessing and a query phase. 
-In the preprocessing phase, $G$ is decomposed into a finite  set of (possibly overlapping) subregions $\calR$.
+In the preprocessing phase, $G_S$ is decomposed into a finite  set of (possibly overlapping) subregions $\calR$.
 Each subregion $R_i \in \calR$ is a hyper-ball defined using a center which we refer to as the ``attractor state''~
 \sAttract and a radius $r_i$.
 % centered around what we call the $attractor$ states $s_{attractor_i}$ and radii $r_i$, where $i$ = 1 to $n$. 
 These regions are constructed in such a way that the following two properties hold
 \begin{enumerate}
-  \item[P1] For any goal state $s_{\text{goal}} \in R_i \cap G$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sStart$ will result in a collision-free path to \sAttract.
-  \item[P2] The union of all the subregions completely cover $G$. 
-  		Namely, $\forall s \in \calS \cap G, \exists R_i \ s.t. \ s \in R_i$.
+  \item[P1] For any goal state $s_{\text{goal}} \in R_i \cap G_S$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sStart$ will result in a collision-free path to \sAttract.
+  \item[P2] The union of all the subregions completely cover $G_S$. 
+  		Namely, $\forall s \in G_S, \exists R_i \ s.t. \ s \in R_i$.
   		%In other words, any query state $\sGoal \in G$ will fall in atleast one of the subregions.
 \end{enumerate}
 
@@ -220,11 +221,11 @@ In the query phase, given a query~\sGoal, we
 
 \subsection {Algorithm}
 \subsubsection{Preprocessing Phase}
-The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from each \sAttract to~\sStart. 
+The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_S$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from each \sAttract to~\sStart. 
 
-The algorithm covers~$G$ by iteratively finding a state $s$ not covered by any region and computing a new region centered at $s$.
-To ensure that $G$ is complete covered (property P2) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
-We start by initializing~$V$ to some random state in $G$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G$ is indeed covered.
+The algorithm covers~$G_S$ by iteratively finding a state $s$ not covered by any region and computing a new region centered at $s$.
+To ensure that $G_S$ is complete covered (property P2) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
+We start by initializing~$V$ with some random state in $G_S$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G_S$ is indeed covered.
 
 At every iteration, we pop a state from $V$ (line~\ref{alg:1:pop}), and if there is no region covering it, we add it as a new attractor state and compute a path $\pi_i$ to $\sStart$ (line~\ref{alg:1:path}).
 We then compute the corresponding region (line~\ref{alg:1:cr} and Alg.~\ref{alg:2}).
@@ -234,14 +235,14 @@ The search terminates with the region's radius $r_i$ and a list of frontier stat
 The valid and invalid states are then added to $V$ and $I$, respectively (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}).
 
 
-Once $V$ gets empty the algorithm starts to search for states which are invalid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G$ is covered under at least one subregion.
+Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G_S$ is covered under at least one subregion.
 
 %{\color{blue} What is SearchValidUncoveredStates?.}
 
 
 \begin{algorithm}[t]
 \footnotesize
-\hspace*{\algorithmicindent} \textbf{Inputs:} $G$, $\sStart$   
+\hspace*{\algorithmicindent} \textbf{Inputs:} $G_S$, $\sStart$   
 \Comment{goal region and start state} 
 
 \hspace*{\algorithmicindent} \textbf{Outputs:} 
@@ -255,9 +256,9 @@ $\calR, \calL$
 
 
 \begin{algorithmic}[1]
-\Procedure{PreprocessRegion}{$G$}
+\Procedure{PreprocessRegion}{$G_S$}
 %\Procedure{PreprocessRegion}{$G, r_{\text{max}}$}
-  \State $s \leftarrow$\textsc{ SampleValidState}($G$)  
+  \State $s \leftarrow$\textsc{ SampleValidState}($G_S$)  
   \State $V \leftarrow \{ s \}$   \Comment{valid frontier states initialized to a random state} \label{alg:1:v}
   \State $I$ = $\emptyset$   \Comment{invalid frontier states} \label{alg:1:i}
   \State $ i \leftarrow 0$
@@ -316,7 +317,7 @@ $\calR, \calL$
   	\includegraphics[width=0.25\textwidth]{Alg2.pdf}
   	% \vspace{-2mm}
   \caption{
-  Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G$ (grey) containing an obstacle (red).
+  Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G_S$ (grey) containing an obstacle (red).
   Frontier states  and first state not in $R_i$ are depicted by circles and a cross, respectively.
 }
    	\label{fig:alg2}
@@ -324,19 +325,24 @@ $\calR, \calL$
 \end{figure}
 
 \begin{table}[tb]
-  \begin{center}
-    \begin{tabular}{ l | c c c c}
-       & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & Our method \\
-     \hline
-     Mean Planning time [ms]& - & - & - & 0.48 \\
-     Worst-case planning time [ms]& - & - & - & 1.01 \\
-     Success rate [$\%$]	& - & - & - & 100 \\
-    \end{tabular}
-    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the results for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation T.}
+  % \begin{center}
+    \resizebox{\linewidth}{!}{%
+      \begin{tabular}{ l | c c c c}
+         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & Our method \\
+       \hline
+       Planning time [ms]& 6.3 (11.6) & 6.6 (11.6) & 8.6 (13.0) & 0.48 (1.01)\\
+       % Planning time [ms]& 6.8 (12.2) & 7.2 (18.0) & - (-) & 0.48 (1.01)\\
+       Success rate [$\%$] & 92 & 97 & 100 & 100 \\
+       % Success rate [$\%$] & 90 & - & - & 100 \\
+      \end{tabular}
+  }
+    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the mean/worst-case planning times and success rates for our method and for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,128 seconds).}
     \label{tab:stats}
-  \end{center}
+  % \end{center}
 %  \vspace{-3mm}
 \end{table}
+
+% 1865 regions 984 secs
 
 \paragraph*{Reachability Search}
 The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2} and Fig.~\ref{fig:alg2}) which we call a ``Reachability Search''. The algorithm maintains a set of \emph{reachable} states $S_{\text{reachable}}$ for which property P1 holds. 
@@ -360,11 +366,13 @@ The algorithm terminates when the search pops a state which is valid but does no
 %\Procedure{ComputeReachability}{$\sAttract, r_{\text{max}}$}
 \State $S_{\text{reachable}} \leftarrow \{\sAttract\}$ \Comment{Reachable set} \label{alg:2:reachable}
 \State OPEN $\leftarrow \{$Preds($\sAttract$)$\}$  \Comment{key: $h(s,\sAttract)$} \label{alg:2:OPEN}
+\State CLOSED $\leftarrow \emptyset$
 \State $r_i \leftarrow 0$
 
 %\While {$r_i \leq r_{\text{max}}$}
 \Loop{}
     \State $s \leftarrow$ OPEN.pop()
+    \State insert $s$ in CLOSED
     \State $s'_g \leftarrow \arg \min_{s' \in \text{Succ}(s)} h(s', \sAttract)$ 
 %    \State $s'_g \leftarrow$ GreedySucc($s$) 
  \Comment{greedy succesor}
@@ -377,8 +385,8 @@ The algorithm terminates when the search pops a state which is valid but does no
     \EndIf
     \State $r_i \leftarrow h(s, \sAttract)$ \label{alg:2:rad}
     \For {each $p \in \text{Preds}(s)$}
-        \If {$p \notin S_{\text{reachable}}$}    \Comment{avoid re-evaluation}
-            \State Insert $p$ in OPEN with priority $h(p, \sAttract)$
+        \If {$p \notin$ CLOSED}
+            \State insert $p$ in OPEN with priority $h(p, \sAttract)$
         \EndIf
     \EndFor
 \EndLoop
@@ -390,7 +398,7 @@ The algorithm terminates when the search pops a state which is valid but does no
 \end{algorithm}
 
 \subsubsection{Query Phase}
-For any query goal state $s_{\text{goal}} \in G$, we find a subregion $R_i \in \calR$ which covers it. Namely, a region~$R_i$ for which 
+For any query goal state $s_{\text{goal}} \in G_S$, we find a subregion $R_i \in \calR$ which covers it. Namely, a region~$R_i$ for which 
 $h(s_{\text{goal}}, \sAttract) < r_i$.
 We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract. The traced path is then stitched to the corresponding precomputed path~$\pi_i \in \calL$. 
 Note that at no point  do we need to perform collision checking in the query phase.
@@ -399,7 +407,7 @@ The query time comprises of
 (i)~finding the containing subregion $R_i$ 
 and
 (ii)~running the greedy search to $\sAttract$.
-Step (i) requires iterating over all subregions which takes $O(|\calR|)$ steps while 
+Step (i) requires iterating over all subregions (in the worst case) which takes $O(|\calR|)$ steps while 
 step (ii) requires expanding a number of states which is proportional to $r_i$.
 Thus, after the preprocessing stage the maximal query time can be computed.
 
@@ -412,7 +420,7 @@ Thus, after the preprocessing stage the maximal query time can be computed.
 %TODO
 
 \section{Evaluation}
-We evaluated our algorithm on a PR2 for the single-arm (7 DOF) planning problem depicted in Fig.~\ref{fig:sim}. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
+We evaluated our algorithm by getting some preliminary results on the PR2 robot for the single-arm (7 DOF) planning problem depicted in Fig.~\ref{fig:sim}. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
 We define the task-relevant goal region~$G$ by bounding the position and orientation of the end effector. 
 
 %As mentioned, our method allows to guarantee bounds on the query time. The worst-case query time is bounded using the radius of the largest subregion and the total number of subregions that cover $G$. 
@@ -420,9 +428,9 @@ We define the task-relevant goal region~$G$ by bounding the position and orienta
 
 %\subsection{Results}
 We compared our approach with the \textsf{PRM} algorithm in terms of success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. 
-Preprocessing (Alg.~\ref{alg:1}) took 1,128 seconds and returned 1,490 subregions. For a fair comparision the \textsf{PRM} was given the same amount of preprocessing time and the paths from all the nodes in~$G$ to $s_{\text{start}}$ were precomputed. 
+Preprocessing (Alg.~\ref{alg:1}) took 984 seconds and returned 1,865 subregions. For a fair comparision, for \textsf{PRM} the paths from all the nodes in~$G$ to $s_{\text{start}}$ were precomputed. 
 In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
-We also bootstrap \textsf{PRM} with 20 goal states from $G$. 
+We also bootstrap \textsf{PRM} with 20 goal states from $G$. Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.
 
 
 \begin{figure}[tb]

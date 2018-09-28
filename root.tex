@@ -97,7 +97,7 @@ In this work we are interested in the settings where the tasks are similar, yet 
 Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the configuration-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is impractical.
-Moreover, as far as we are aware of, non of the general-purpose algorithms come with \emph{provable} guarantees on the maximal query time.
+Moreover, as far as we are aware of, none of the general-purpose algorithms come with \emph{provable} guarantees on the real-time performance.
 %
 To this end, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than 4 milliseconds.
 
@@ -163,7 +163,7 @@ Our key insight is to combine a precomputed library~$\calL$ of paths between \em
 This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which is in the order of milliseconds for a seven DOF manipulator.
 
 %7. How do we compare against the state of the art?
-We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2} and~\ref{fig:sim})
+We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2})
 and demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a little memory footprint if 0.2 Mbs and while guaranteeing a maximal query time of less than 4 milliseconds.
 
 %8. What are our contributions?
@@ -184,12 +184,12 @@ We make the following assumptions:
   \item[A1] $G_S$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_S$.
 However, storing a path from $\sStart$ to each state in $G_S$ is infeasible.
   
-  \item[A2] The planner has access to a $\textit{weakly-monotonic}$ heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ such that $\forall s_1, s_2  \in G_S$ where $s_1 \neq s_2 \neq s_{goal}$, it holds that,
+  \item[A2] The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_S$. Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_S$ where $s_1 \neq s_2 \neq s_{goal}$, it holds that,
 
   \begin{center}
-    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \quad \wedge s'_1\in G_S $. 
+    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$. 
   \end{center}
-  Namely, for any distinct pair of states ($s_1, s_2$) in $G_S$, at least one of $s_1$'s successors (also belonging to $G_S$) must have a heuristic value less than or equal to its heuristic value. 
+  Namely, for any distinct pair of states ($s_1, s_2$) in $G_S$, at least one of $s_1$'s successors (also belonging to $G_S$) must have a heuristic value less than or equal to its heuristic value.
 	Note that this assumption does not imply  that~$G$ is entirely collision free.
 %	
 %	
@@ -426,7 +426,7 @@ Thus, after the preprocessing stage the maximal query time can be computed.
  \vspace{-6mm}
 \end{table}
 
-We evaluated our algorithm by getting some preliminary results on the PR2 robot for the single-arm (7 DOF) planning problem depicted in Fig.~\ref{fig:sim}. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
+We evaluated our algorithm by getting some preliminary results on the PR2 robot for the single-arm (7 DOF) planning problem. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
 We define the task-relevant goal region~$G$ by bounding the position and orientation of the end effector. 
 
 %As mentioned, our method allows to guarantee bounds on the query time. The worst-case query time is bounded using the radius of the largest subregion and the total number of subregions that cover $G$. 
@@ -437,18 +437,21 @@ We compared our approach with the \textsf{PRM} algorithm in terms of success rat
 Preprocessing (Alg.~\ref{alg:1}) took 984 seconds and returned 1,865 subregions. For a fair comparision, for \textsf{PRM} the paths from all the nodes in~$G$ to $s_{\text{start}}$ were precomputed. 
 In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
 We also bootstrap \textsf{PRM} with 20 goal states from~$G$. Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.
- \vspace{-5mm}
+ % \vspace{-5mm}
 
-\begin{figure}[tb]
-  \centering
-    \includegraphics[width=0.20\textwidth]{simulation3.png}
-    % \vspace{-2mm}
-  \caption{
-  Experimental setup---The grid (in blue) depict the 3D projection of the goal region $G_S$.
-}
-    \label{fig:sim}
- \vspace{-8mm}
-\end{figure}
+ \section{Conclusion}
+We proposed a preprocessing-based motion planning algorithm that provides provable real-time performance guarantees for repetitive tasks and showed preliminary results. We aim to perform experiments on the hardware with the conveyor setup to demonstrate the efficiency of our planner on a real world system. Moreover on the theoretical side, we aim to provide guarantees on the solution quality.
+
+% \begin{figure}[tb]
+%   \centering
+%     \includegraphics[width=0.20\textwidth]{simulation3.png}
+%     % \vspace{-2mm}
+%   \caption{
+%   Experimental setup---The grid (in blue) depict the 3D projection of the goal region $G_S$.
+% }
+%     \label{fig:sim}
+%  \vspace{-8mm}
+% \end{figure}
 
 
 

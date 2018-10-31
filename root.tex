@@ -177,19 +177,19 @@ We are given in advance a start configuration~$\sStart \in \calX$ and some goal 
 In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
 We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$
-and set $G_S := S \cap G$ to be the states that reside in the goal region.
+and set $G_\calS := \calS \cap G$ to be the states that reside in the goal region.
 We make the following assumptions:
 
 \begin{enumerate}
-  \item[A1] $G_S$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_S$.
-However, storing a path from $\sStart$ to each state in $G_S$ is infeasible.
+  \item[A1] $G_\calS$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_\calS$.
+However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
   
-  \item[A2] The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_S$. Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_S$ where $s_1 \neq s_2 \neq s_{goal}$, it holds that,
+  \item[A2] The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 \neq s_{goal}$, it holds that,
 
   \begin{center}
     $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$. 
   \end{center}
-  Namely, for any distinct pair of states ($s_1, s_2$) in $G_S$, at least one of $s_1$'s successors (also belonging to $G_S$) must have a heuristic value less than or equal to its heuristic value.
+  Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors (also belonging to $G_\calS$) must have a heuristic value less than or equal to its heuristic value.
 	Note that this assumption does not imply  that~$G$ is entirely collision free.
 %	
 %	
@@ -199,20 +199,20 @@ However, storing a path from $\sStart$ to each state in $G_S$ is infeasible.
 \end{enumerate}
 
 These assumptions allow us to establish strong theoretical properties regarding the efficiency of our planner. Namely, that
-within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_S$. Proofs are omitted due to lack of space. 
+within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_\calS$. Proofs are omitted due to lack of space. 
 
 \subsection{Key Idea}
 Our planner comprises of a preprocessing and a query phase. 
-In the preprocessing phase, $G_S$ is decomposed into two finite  sets of (possibly overlapping) subregions $\calR$ and~$\hat{\calR}$.
+In the preprocessing phase, $G_\calS$ is decomposed into two finite  sets of (possibly overlapping) subregions $\calR$ and~$\hat{\calR}$.
 Subregions in $\hat{\calR}$ only contain states that are in collision.
 Each subregion $R_i \in \calR$ is a hyper-ball defined using a center which we refer to as the ``attractor state''~
 \sAttract and a radius $r_i$.
 % centered around what we call the $attractor$ states $s_{attractor_i}$ and radii $r_i$, where $i$ = 1 to $n$. 
 These regions are constructed in such a way that the following two properties hold
 \begin{enumerate}
-  \item[P1] For any goal state $s_{\text{goal}} \in R_i \cap G_S$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sStart$ will result in a collision-free path to \sAttract.
-  \item[P2] The union of all the subregions completely cover $G_S$. 
-  		Namely, $\forall s \in G_S, \exists R \in \calR \cup \hat{\calR} \ s.t. \ s \in R$.
+  \item[P1] For any goal state $s_{\text{goal}} \in R_i \cap G_\calS$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path to \sAttract.
+  \item[P2] The union of all the subregions completely cover $G_\calS$. 
+		  Namely, $\forall s \in G_\calS, \exists R \in \calR \cup \hat{\calR} \ s.t. \ s \in R$.
   		%In other words, any query state $\sGoal \in G$ will fall in atleast one of the subregions.
 \end{enumerate}
 
@@ -224,11 +224,11 @@ In the query phase, given a query~\sGoal, we
 
 \subsection {Algorithm}
 \subsubsection{Preprocessing Phase}
-The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_S$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from each \sAttract to~\sStart. 
+The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_\calS$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from each \sAttract to~\sStart. 
 
-The algorithm covers~$G_S$ by iteratively finding a state $s$ not covered by any region and computing a new region centered at $s$.
-To ensure that $G_S$ is complete covered (property P2) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
-We start by initializing~$V$ with some random state in $G_S$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G_S$ is indeed covered.
+The algorithm covers~$G_\calS$ by iteratively finding a state $s$ not covered by any region and computing a new region centered at $s$.
+To ensure that $G_\calS$ is complete covered (property P2) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
+We start by initializing~$V$ with some random state in $G_\calS$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G_\calS$ is indeed covered.
 
 At every iteration, we pop a state from $V$ (line~\ref{alg:1:pop}), and if there is no region covering it, we add it as a new attractor state and compute a path $\pi_i$ to $\sStart$ (line~\ref{alg:1:path}).
 We then compute the corresponding region (line~\ref{alg:1:cr} and Alg.~\ref{alg:2}).
@@ -238,20 +238,20 @@ The search terminates with the region's radius $r_i$ and a list of frontier stat
 The valid and invalid states are then added to $V$ and $I$, respectively (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}).
 
 
-Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G_S$ is covered under at least one subregion.
+Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G_\calS$ is covered under at least one subregion.
 
 %{\color{blue} What is SearchValidUncoveredStates?.}
 
 
 \begin{algorithm}[t]
 \footnotesize
-\hspace*{\algorithmicindent} \textbf{Inputs:} $G_S$, $\sStart$   
+\hspace*{\algorithmicindent} \textbf{Inputs:} $G_\calS$, $\sStart$
 \Comment{goal region and start state} 
 
 \hspace*{\algorithmicindent} \textbf{Outputs:} 
 $\calR, \calL$
 %$R_i = (\sAttract, r_i)$, $\pi_i$,
-\Comment{subregions and corresponding paths to $\sStart$} 
+\Comment{subregions and corresponding paths to $\sStart$}
 
 %\hspace*{\algorithmicindent}
 % \textbf{Parameters:} $r_{\text{max}}$   \Comment{maximum radius of a region}
@@ -259,9 +259,9 @@ $\calR, \calL$
 
 
 \begin{algorithmic}[1]
-\Procedure{PreprocessRegion}{$G_S$}
+\Procedure{PreprocessRegion}{$G_\calS$}
 %\Procedure{PreprocessRegion}{$G, r_{\text{max}}$}
-  \State $s \leftarrow$\textsc{ SampleValidState}($G_S$)  
+  \State $s \leftarrow$\textsc{ SampleValidState}($G_\calS$)
   \State $V \leftarrow \{ s \}$   \Comment{valid frontier states initialized to a random state} \label{alg:1:v}
   \State $I$ = $\emptyset$   \Comment{invalid frontier states} \label{alg:1:i}
   \State $ i \leftarrow 0$
@@ -322,7 +322,7 @@ $\calR, \calL$
   	\includegraphics[width=0.20\textwidth]{Alg2.pdf}
   	% \vspace{-2mm}
   \caption{
-  Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G_S$ (grey) containing an obstacle (red).
+  Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G_\calS$ (grey) containing an obstacle (red).
   Frontier states  and first state not in $R_i$ are depicted by circles and a cross, respectively.
 }
    	\label{fig:alg2}
@@ -386,7 +386,7 @@ The algorithm terminates when the search pops a state which is valid but does no
 \end{algorithm}
 
 \subsubsection{Query Phase}
-For any query goal state $s_{\text{goal}} \in G_S$, we find a subregion $R_i \in \calR$ which covers it. Namely, a region~$R_i$ for which 
+For any query goal state $s_{\text{goal}} \in G_\calS$, we find a subregion $R_i \in \calR$ which covers it. Namely, a region~$R_i$ for which 
 $h(s_{\text{goal}}, \sAttract) < r_i$.
 We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract. The traced path is then stitched to the corresponding precomputed path~$\pi_i \in \calL$. 
 Note that at no point  do we need to perform collision checking in the query phase.
@@ -414,7 +414,7 @@ Thus, after the preprocessing stage the maximal query time can be computed.
       \begin{tabular}{ l | c c c c}
          & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & Our method \\
        \hline
-       Planning time [ms]& 6.3 (11.6) & 6.6 (11.6) & 8.6 (13.0) & 0.48 (1.01)\\
+       Planning time [ms]& 20.2 (28.2) & 21.8 (34.1) & 22.9 (31.9) & 0.48 (1.01)\\
        % Planning time [ms]& 6.8 (12.2) & 7.2 (18.0) & - (-) & 0.48 (1.01)\\
        Success rate [$\%$] & 92 & 97 & 100 & 100 \\
        % Success rate [$\%$] & 90 & - & - & 100 \\
@@ -447,7 +447,7 @@ We proposed a preprocessing-based motion planning algorithm that provides provab
 %     \includegraphics[width=0.20\textwidth]{simulation3.png}
 %     % \vspace{-2mm}
 %   \caption{
-%   Experimental setup---The grid (in blue) depict the 3D projection of the goal region $G_S$.
+%   Experimental setup---The grid (in blue) depict the 3D projection of the goal region $G_\calS$.
 % }
 %     \label{fig:sim}
 %  \vspace{-8mm}

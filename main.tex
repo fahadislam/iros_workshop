@@ -27,6 +27,7 @@
 \usepackage{algorithmicx}
 \usepackage[noend]{algpseudocode}
 \usepackage{algpseudocode}
+\usepackage{parskip}
 \algrenewcommand\algorithmicindent{1.0em}%
 
 \newcommand{\calX}{\ensuremath{\mathcal{X}}\xspace}
@@ -63,6 +64,7 @@ The Robotics Institute, Carnegie Mellon University\\
 maxim@cs.cmu.edu
 }
 \maketitle
+
 \begin{abstract}
 In manufacturing, robots often have to perform highly-repetitive manipulation tasks in structured environments. 
 In this work we are interested in the settings where the tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
@@ -71,8 +73,10 @@ Preprocessing-based approaches prove to be very beneficial in these settings---t
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is impractical.
 Moreover, as far as we are aware of, none of the general-purpose algorithms come with \emph{provable} guarantees on the real-time performance.
 %
-To this end, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase. We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm while guaranteeing a maximum query time of less than 4 milliseconds.
+To this end, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase.
+We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm, while guaranteeing a maximum query time of less than 4 milliseconds.
 \end{abstract}
+
 \section{Introduction}
 
 %1. What is the problem?
@@ -81,6 +85,8 @@ Similarly, consider a robot given the task of stock replenishment---moving in a 
 %2. Why is it relevant?
 These problems are examples of repetitive tasks performed by (possibly highly articulated) robots in static environments where the start and goal of each repetitive task is similar, yet not identical, to previous tasks.
 Difference in the exact start and goal position may be due to uncertainty in the environment (objects placed on different parts of the conveyor belt or in different orientation) or due to highly-similar tasks (objects placed in similar positions on a shelf).
+
+{\color{blue} I think the motivation is unclear here after reading the first para, and the second para starts kind of out of the blue.}
 
 %3. Why is it hard?
 As the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable. 
@@ -97,6 +103,8 @@ Query times can be significantly sped up by further preprocessing the roadmaps u
 Unfortunately, there is no guarantee that a query can be connected to the roadmap as \textsf{PRM} only provides \emph{asymptotic} guarantees~\cite{KKL98}.
 Furthermore, this connecting phase requires running a collision-detection algorithm which is typically considered the computational bottleneck in many motion-planning algorithms~\cite{L06}.
 
+{\color{blue} Cite experience graphs in the context of learning from previous planning episodes. Although the e-graph heuristic speeds up the search but 1. the e-graph heuristic computation itself is expensive 2. the size of e-graph keeps growing and there is no systematic way of maintaing a sparse e-graph.}
+
 Recently, Lehner and  Albu{-}Sch{\"{a}}ffer~\cite{LA18} suggest the repetition roadmap to extend the \textsf{PRM} for the case of multiple highly-similar scenarios.
 While their approach exhibits significant speedup in computation time, it still suffers from the previously-mentioned shortcomings.
 
@@ -112,7 +120,23 @@ Unfortunately, this approach also cannot provide any of the guarantees required 
 Our work bares resemblance to previous work on 
 subgoal graphs~\cite{UK17,UK18} and to real-time planning~\cite{KL06,KS09,K90}.
 However, in the former, the entire configuration space is preprocessed in order to efficiently answer queries between \emph{any} pair of states which deems it applicable only to low-dimensional spaces.
-Similarly, in the latter, to provide guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
+{\color{blue} Also their $connect$ step is expensive as it requires a Dijkstra's like search to connect to the subgoal graph.} Similarly, in the latter, to provide guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
+
+{\color{blue} 
+More citations:\\
+1. Composition of local potential functions for global robot control and navigation.\\
+2. Integrated Planning and Control for Convex-bodied Nonholonomic Systems using Local Feedback Control Policies.
+
+I remember Max mentioning this work once, I haven't read these papers thoroughly though (one of these is a thesis doc). My understanding is that they have a similar idea of constructing these attractions "funnels" which we call subregions. They are using this idea in the controls world while we are doing planning.
+
+3. LQR-Trees: Feedback Motion Planning
+on Sparse Randomized Trees \\
+This also seems to be a similar idea from the controls community.
+
+These are all well cited papers. You might want to skim through these to get the right context but I think they are relevant.
+
+4. Experience-based planning with sparse roadmap spanners \\
+}
 
 \begin{figure}[tb]
   \centering
@@ -131,9 +155,13 @@ Similarly, in the latter, to provide guarantees on planning time the search only
 Our key insight is to combine a precomputed library~$\calL$ of paths between \emph{several} start and goal configurations together with a method to connect \emph{any} start and goal configuration to a path in~$\calL$ \emph{without} having to perform collision detection.
 This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which is in the order of milliseconds for a seven DOF manipulator.
 
+{\color{blue} We need to redo this para. The workshop reviewer also said that it's unclear}
+
 %7. How do we compare against the state of the art?
 We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2})
 and demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a little memory footprint if 0.2 Mbs and while guaranteeing a maximal query time of less than 4 milliseconds.
+
+{\color{blue} Split this section into Intro and Related work}
 
 %8. What are our contributions?
 %9. What are our limitations?
@@ -368,13 +396,70 @@ Step (i) requires iterating over all subregions (in the worst case) which takes 
 step (ii) requires expanding a number of states which is proportional to $r_i$.
 Thus, after the preprocessing stage the maximal query time can be computed.
 
+\begin{algorithm}[t]
+\footnotesize
+\caption{Query}\label{alg:2}
 
+\begin{algorithmic}[1]
+\Procedure{FindGreedyPath}{$s_1, s_2$}
+	\State $s \leftarrow s_1$
+	\While{$s \neq s_2$}
+    	\State $s'_g \leftarrow \arg \min_{s' \in \text{Succ}(s)} h(s, s_2)$ 	\Comment{greedy succesor}
+    	\State $s \leftarrow s'_g$
+    	\State $\pi \cup {s}$ 
+    \EndWhile
+    \State \Return $\pi$
+\EndProcedure
+
+\Procedure{Query}{$\sGoal$}
+	\For {each $R_i \in \calR$}
+		\State $(\sAttract, r_i)$ $\leftarrow$ ${R_i}$;
+		\If {$h(s_{\text{goal}}, \sAttract) < r_i$}
+		\EndIf
+		\State $\pi_g \leftarrow$ \textsc{FindGreedyPath} ($\sGoal, \sAttract$)
+		\State \Return $\pi_g \cup \pi_i$	\Comment{$\pi_i \in \calL$}
+	\EndFor
+% \State $S_{\text{reachable}} \leftarrow \{\sAttract\}$ \Comment{Reachable set} \label{alg:2:reachable}
+% \State OPEN $\leftarrow \{$Preds($\sAttract$)$\}$  \Comment{key: $h(s,\sAttract)$} \label{alg:2:OPEN}
+% \State CLOSED $\leftarrow \emptyset$
+% \State $r_i \leftarrow 0$
+
+% %\While {$r_i \leq r_{\text{max}}$}
+% \Loop{}
+%     \State $s \leftarrow$ OPEN.pop()
+%     \State insert $s$ in CLOSED
+%     \State $s'_g \leftarrow \arg \min_{s' \in \text{Succ}(s)} h(s', \sAttract)$ 
+% %    \State $s'_g \leftarrow$ GreedySucc($s$) 
+%  \Comment{greedy succesor}
+%  % acc. to some tie-breaking criteria}
+%     \If {$s'_g$ $\in$ $S_{\text{reachable}}$ and Valid(edge(s,$s'_g$))}  \label{alg:2:crit}
+%         \State $S_{\text{reachable}} \leftarrow S_{\text{reachable}} \cup \{s\}$  \Comment{$s$ is greedy} \label{alg:2:set}
+%     \ElsIf {Valid($s$)} \label{alg:2:terminate}
+% 		\State \Return $r_i$
+% %        \State break
+%     \EndIf
+%     \State $r_i \leftarrow h(s, \sAttract)$ \label{alg:2:rad}
+%     \For {each $p \in \text{Preds}(s)$}
+%         \If {$p \notin$ CLOSED}
+%             \State insert $p$ in OPEN with priority $h(p, \sAttract)$
+%         \EndIf
+%     \EndFor
+% \EndLoop
+%\EndWhile
+%\State \Return $r_i$
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 
 % which makes the query phase highly efficient.
 
-%\subsection {Theoretical Properties and Computational complexity}
-%TODO
+\section {Analysis}
+{\color{blue} TODO}\\
+1. A greedy search from every reachable state towards the corresponding attractor state will be monotonically decreasing in the heuristic values.\\
+2. All the states with heuristic values less than R are reachable\\
+3. Alg. 2 returns the maximum radius R within which all the states with heuristic values less than R are reachable. 
 
 \section{Evaluation}
 \begin{table}[tb]

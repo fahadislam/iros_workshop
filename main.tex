@@ -28,6 +28,8 @@
 \usepackage[noend]{algpseudocode}
 \usepackage{algpseudocode}
 \usepackage{parskip}
+\usepackage{amsthm}
+
 \algrenewcommand\algorithmicindent{1.0em}%
 
 \newcommand{\calX}{\ensuremath{\mathcal{X}}\xspace}
@@ -39,6 +41,9 @@
 \newcommand{\sStart}{\ensuremath{s_{\text{start}}\xspace}}
 \newcommand{\sGoal}{\ensuremath{s_{\text{goal}}\xspace}}
 \newcommand{\sNom}{\ensuremath{s_{\text{nominal}}\xspace}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
 %%%%%%%%%%%%%%%%%%%
 
 \frenchspacing  %Required
@@ -398,7 +403,7 @@ Thus, after the preprocessing stage the maximal query time can be computed.
 
 \begin{algorithm}[t]
 \footnotesize
-\caption{Query}\label{alg:2}
+\caption{Query}\label{alg:3}
 
 \begin{algorithmic}[1]
 \Procedure{FindGreedyPath}{$s_1, s_2$}
@@ -456,10 +461,30 @@ Thus, after the preprocessing stage the maximal query time can be computed.
 % which makes the query phase highly efficient.
 
 \section {Analysis}
+
+\begin{theorem}
+For any subregion $R_i \in \calR$, a greedy search \footnote{implemented in the procedure \textsc{FindGreedyPath()} of Alg. ~\ref{alg:3}} beginning from any state $s$ $\in$ $R_i$ towards the corresponding attractor state $\sAttract$ cannot get stuck in loops.
+\end{theorem}
+
+\begin{proof}
+We can prove this theorem by contradiction. For the greedy search to get stuck in a loop, the greedy successor of every state in the loop must also be part of the loop, or in other words there cannot exist a state in the loop with it's greedy successor exiting the loop. But that is not possible since at least the first state from this loop that got added to $S_{\text{reachable}}$ must have a greedy successor from outside the loop and must also belong to $S_{\text{reachable}}$ with a valid transition (Alg. ~\ref{alg:2}, lines~\ref{alg:2:crit} and~\ref{alg:2:set}). Hence the theorem is proved.
+\end{proof}
+
+\begin{theorem}
+For any subregion $R_i \in \calR$, every state $s$ with $h(s,\sAttract) < r_i$ is reachable.
+\end{theorem}
+
+\begin{proof}
+We will again prove this theorem by contradiction. Assume that there exists a state $s$ with $h(s,\sAttract) < r_i$ and was yet not marked as $reachable$ in the reachability search. In that case along the path from $s$ to $\sAttract$, traced by the greedy successors there must exist at least one state $s'$ s.t. $h(s',\sAttract) > r_i$. The reason is that as the reachability search expands states in the order of minimum heuristic value, and $s'$ would block the search from covering $s$. But since we assume that the heuristic function is weekly monotonic, this hypothesis cannot hold true and hence there cannot exist such a state $s$.
+\end{proof}
+
+\begin{theorem}
+Alg. 2 returns the maximum radius $r_i$ for a subregion $R_i$ within which every state $s$ with $h(s,\sAttract) < r$ is reachable. 
+\end{theorem}
+
+\begin{proof}
 {\color{blue} TODO}\\
-1. A greedy search from every reachable state towards the corresponding attractor state will be monotonically decreasing in the heuristic values.\\
-2. All the states with heuristic values less than R are reachable\\
-3. Alg. 2 returns the maximum radius R within which all the states with heuristic values less than R are reachable. 
+\end{proof} 
 
 \section{Evaluation}
 \begin{table}[tb]

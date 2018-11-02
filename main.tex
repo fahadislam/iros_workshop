@@ -36,6 +36,7 @@
 \newcommand{\calL}{\ensuremath{\mathcal{L}}\xspace}
 \newcommand{\calS}{\ensuremath{\mathcal{S}}\xspace}
 \newcommand{\calR}{\ensuremath{\mathcal{R}}\xspace}
+\newcommand{\calD}{\ensuremath{\mathcal{D}}\xspace}
 
 \newcommand{\sAttract}{\ensuremath{s^{\text{attractor}}_i}\xspace}
 \newcommand{\sStart}{\ensuremath{s_{\text{start}}\xspace}}
@@ -43,7 +44,7 @@
 \newcommand{\sNom}{\ensuremath{s_{\text{nominal}}\xspace}}
 
 \newtheorem{theorem}{Theorem}
-\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{lemma}{Lemma}
 %%%%%%%%%%%%%%%%%%%
 
 \frenchspacing  %Required
@@ -344,7 +345,7 @@ The search maintains a priority queue OPEN ordered according to $h(s,\sAttract)$
 %As the priority used for OPEN is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). 
 
 
-The algorithm terminates when the search pops a state which is valid but does not have a successor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to the condition when the reachability search exists an obstacle (see Fig.~\ref{fig:alg2}). At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
+The algorithm terminates when the search pops a state which is valid but does not have a greedy successor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to the condition when the reachability search exists an obstacle (see Fig.~\ref{fig:alg2}). At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
 
 
 \begin{algorithm}[t]
@@ -393,14 +394,6 @@ $h(s_{\text{goal}}, \sAttract) < r_i$.
 We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract. The traced path is then stitched to the corresponding precomputed path~$\pi_i \in \calL$. 
 Note that at no point  do we need to perform collision checking in the query phase.
 
-The query time comprises of 
-(i)~finding the containing subregion $R_i$ 
-and
-(ii)~running the greedy search to $\sAttract$.
-Step (i) requires iterating over all subregions (in the worst case) which takes $O(|\calR|)$ steps while 
-step (ii) requires expanding a number of states which is proportional to $r_i$.
-Thus, after the preprocessing stage the maximal query time can be computed.
-
 \begin{algorithm}[t]
 \footnotesize
 \caption{Query}\label{alg:3}
@@ -411,7 +404,7 @@ Thus, after the preprocessing stage the maximal query time can be computed.
 	\While{$s \neq s_2$}
     	\State $s'_g \leftarrow \arg \min_{s' \in \text{Succ}(s)} h(s, s_2)$ 	\Comment{greedy succesor}
     	\State $s \leftarrow s'_g$
-    	\State $\pi \cup {s}$ 
+    	\State $\pi \cup \{s\}$ 
     \EndWhile
     \State \Return $\pi$
 \EndProcedure
@@ -420,9 +413,9 @@ Thus, after the preprocessing stage the maximal query time can be computed.
 	\For {each $R_i \in \calR$}
 		\State $(\sAttract, r_i)$ $\leftarrow$ ${R_i}$;
 		\If {$h(s_{\text{goal}}, \sAttract) < r_i$}
-		\EndIf
-		\State $\pi_g \leftarrow$ \textsc{FindGreedyPath} ($\sGoal, \sAttract$)
-		\State \Return $\pi_g \cup \pi_i$	\Comment{$\pi_i \in \calL$}
+  		\State $\pi_g \leftarrow$ \textsc{FindGreedyPath} ($\sGoal, \sAttract$)
+  		\State \Return $\pi_g \cup \pi_i$	\Comment{$\pi_i \in \calL$}
+    \EndIf
 	\EndFor
 % \State $S_{\text{reachable}} \leftarrow \{\sAttract\}$ \Comment{Reachable set} \label{alg:2:reachable}
 % \State OPEN $\leftarrow \{$Preds($\sAttract$)$\}$  \Comment{key: $h(s,\sAttract)$} \label{alg:2:OPEN}
@@ -462,29 +455,54 @@ Thus, after the preprocessing stage the maximal query time can be computed.
 
 \section {Analysis}
 
-\begin{theorem}
-For any subregion $R_i \in \calR$, a greedy search \footnote{implemented in the procedure \textsc{FindGreedyPath()} of Alg. ~\ref{alg:3}} beginning from any state $s$ $\in$ $R_i$ towards the corresponding attractor state $\sAttract$ cannot get stuck in loops.
-\end{theorem}
+\begin{lemma}
+\label{lemma:1}
+A greedy search with respect to $h(s, \sAttract)$ starting from any reachable state $s$ $\in$ $R_i \cap G_\calS$ towards the corresponding attractor state $\sAttract$ is complete.
+\end{lemma}
 
 \begin{proof}
-We can prove this theorem by contradiction. For the greedy search to get stuck in a loop, the greedy successor of every state in the loop must also be part of the loop, or in other words there cannot exist a state in the loop with it's greedy successor exiting the loop. But that is not possible since at least the first state from this loop that got added to $S_{\text{reachable}}$ must have a greedy successor from outside the loop and must also belong to $S_{\text{reachable}}$ with a valid transition (Alg. ~\ref{alg:2}, lines~\ref{alg:2:crit} and~\ref{alg:2:set}). Hence the theorem is proved.
+We can prove this lemma by contradiction. Firstly the greedy search in the query phase will always expand states which are $reachable$ because the greedy successor of every reachable state is also reachable (This is by the construction of Alg.~\ref{alg:2}). If we show that the greedy search will not encounter any cycles or in other words it will never reexpand a state, we prove that the search will eventually reach $\sAttract$ and is hence complete.
+
+
+For the greedy search to get stuck in a cycle, the greedy successor of every state in the loop must also be a part of the loop, or in other words there cannot exist a state in the loop with its greedy successor exiting the loop. But that is not possible since at least the first state in this loop that got added to $S_{\text{reachable}}$ must have a greedy successor from outside the loop and must also belong to $S_{\text{reachable}}$ with a valid edge connecting to it (Alg.~\ref{alg:2}, lines~\ref{alg:2:crit} and~\ref{alg:2:set}). Hence the theorem is proved.
 \end{proof}
 
-\begin{theorem}
+\begin{lemma}
+\label{lemma:2}
 For any subregion $R_i \in \calR$, every state $s$ with $h(s,\sAttract) < r_i$ is reachable.
-\end{theorem}
+\end{lemma}
 
 \begin{proof}
-We will again prove this theorem by contradiction. Assume that there exists a state $s$ with $h(s,\sAttract) < r_i$ and was yet not marked as $reachable$ in the reachability search. In that case along the path from $s$ to $\sAttract$, traced by the greedy successors there must exist at least one state $s'$ s.t. $h(s',\sAttract) > r_i$. The reason is that as the reachability search expands states in the order of minimum heuristic value, and $s'$ would block the search from covering $s$. But since we assume that the heuristic function is weekly monotonic, this hypothesis cannot hold true and hence there cannot exist such a state $s$.
+We will again prove this lemma by contradiction. Assume that there exists a state $s$ with $h(s,\sAttract) < r_i$ and was still not marked as $reachable$ in the reachability search. In that case along the path from $s$ to $\sAttract$, traced by the greedy search there must exist at least one state $s'$ s.t. $h(s',\sAttract) > r_i$. The reason is that as the reachability search expands states in the order of minimum heuristic value, $s'$ will never get expanded and thus will block the search from covering $s$. But since we assume that the heuristic function is weekly monotonic, this hypothesis cannot be true and hence there cannot exist such a state $s$.
 \end{proof}
 
 \begin{theorem}
-Alg. 2 returns the maximum radius $r_i$ for a subregion $R_i$ within which every state $s$ with $h(s,\sAttract) < r$ is reachable. 
+For any goal state $s_{\text{goal}} \in R_i \cap G_\calS$ (i.e $h(\sGoal,\sAttract) < r_i$), a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path to \sAttract. 
 \end{theorem}
 
 \begin{proof}
-{\color{blue} TODO}\\
+The proof directly follows from the two lemmas. If for any goal state $\sGoal$, $h(\sGoal,\sAttract) < r_i$, then $\sGoal$ is reachable (Lemma~\ref{lemma:1}) and the greedy search towards $\sAttract$ is complete (Lemma~\ref{lemma:2}). Also as Alg.~\ref{alg:2} ensures that the transitions to the greedy successors are always valid we can guarantee that the greedy search will always return a valid path from $\sGoal$ to $\sAttract$.
+\end{proof}
+
+\begin{lemma}
+Alg. ~\ref{alg:2} returns the maximum radius $r_i$ for a subregion $R_i$ within which every state $s$ with $h(s,\sAttract) < r$ is reachable. 
+\end{lemma}
+
+\begin{proof}
+{\color{blue} May be it is obvious and should just be added as a note and not a theorem.}
+% Once again we will prove by contradiction. Say Alg.~\ref{alg:2} returns a radius $r_{\text{max}} > r_i$. In that case the popped state $s$ for which Alg.~\ref{alg:2} terminated for not having a valid transition to a greedy successor which is also $reachable$ (lines~\ref{alg:2:crit} and~\ref{alg:2:set}), will also be included in $R_i$ while indeed it is not reachable. 
 \end{proof} 
+
+\subsection{Time Complexity of Query Phase}
+The query time comprises of 
+(i)~finding the containing subregion $R_i$ 
+and
+(ii)~running the greedy search to $\sAttract$.
+Step (i) requires iterating over all subregions (in the worst case) which takes $O(|\calR|)$ steps while 
+step (ii) requires expanding the states along the path from $\sGoal$ to $\sAttract$ which requires $O(\calD)$ expansions where $\calD$ is the depth of the deepest subregion. We can measure the depth of each subregion in Alg.~\ref{alg:2} by keeping track of the depth of each expanded state from the root i.e. the $\sAttract$. Hence, overall the query phases takes $O(|\calR| + \calD)$ operations. The maximal query time can also be empirically computed after the preprocessing phase.
+
+%
+Note that we can also bound the number of expansions required for the query phase by bounding the maximum depth of the subregions. We can do that by terminating Alg.~\ref{alg:2} when the $R_i$ reaches the maximum depth or if the existing termination condition (line ~\ref{alg:2:terminate}) is satisfied.
 
 \section{Evaluation}
 \begin{table}[tb]

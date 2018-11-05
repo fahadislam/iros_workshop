@@ -53,22 +53,22 @@
 %PDF Info Is Required:
   \pdfinfo{
 /Title (Provable Infinite-Horizon Real-Time Planning for Repetitive Tasks)}
-\setcounter{secnumdepth}{0}  
+\setcounter{secnumdepth}{2}  
  \begin{document}
 % The file aaai.sty is the style file for AAAI Press 
 % proceedings, working notes, and technical reports.
 %
 \title{Provable Infinite-Horizon Real-Time Planning for Repetitive Tasks}
-\author{
-Fahad Islam,
-Oren Salzman {\normalfont and}
-Maxim Likhachev
-\\
-The Robotics Institute, Carnegie Mellon University\\
-%
-\{fi,osalzman\}@andrew.cmu.edu,
-maxim@cs.cmu.edu
-}
+%\author{
+%Fahad Islam,
+%Oren Salzman {\normalfont and}
+%Maxim Likhachev
+%\\
+%The Robotics Institute, Carnegie Mellon University\\
+%%
+%\{fi,osalzman\}@andrew.cmu.edu,
+%maxim@cs.cmu.edu
+%}
 \maketitle
 
 \begin{abstract}
@@ -84,32 +84,67 @@ We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold i
 \end{abstract}
 
 \section{Introduction}
-
 %1. What is the problem?
-Consider the problem of a robot picking up objects from a high-speed conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
-Similarly, consider a robot given the task of stock replenishment---moving in a supermarket and loading items from a cart it carries to half-empty shelves.
+We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times.
 %2. Why is it relevant?
-These problems are examples of repetitive tasks performed by (possibly highly articulated) robots in static environments where the start and goal of each repetitive task is similar, yet not identical, to previous tasks.
-Difference in the exact start and goal position may be due to uncertainty in the environment (objects placed on different parts of the conveyor belt or in different orientation) or due to highly-similar tasks (objects placed in similar positions on a shelf).
-
-{\color{blue} I think the motivation is unclear here after reading the first para, and the second para starts kind of out of the blue.}
+As a running example, consider the problem of a robot picking up objects from a high-speed conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
+While the environment does not change, the start and goal of each repetitive task is similar, yet not identical, to previous tasks.
+Difference in the exact start and goal position may be due to uncertainty in the environment as objects may be placed on different parts of the conveyor belt or in different orientation.
+Fast planning times immediately correspond to faster unloading capabilities. 
+Moreover, if the planner cannot \emph{guarantee} to pick items from the conveyor in a timely manner, the system is required to account for missed items by e.g., additional conveyor belts that will redirect items back to the robot---a costly backup in terms of both time and space.
 
 %3. Why is it hard?
-As the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable. 
 Clearly, once a task is presented to the robot, it can compute a desired path online.
 However, this may incur large online planning times that may be unacceptable in many settings.
-For example, in our conveyor-belt setting, reducing the planning time immediately corresponds to faster unloading capabilities. 
-Moreover, if the planner cannot \emph{guarantee} to pick items from the conveyor in a timely manner, the system is required to account for missed items by e.g., additional conveyor belts that will redirect items back to the robot---a costly backup in terms of both time and space.
-Thus, a natural approach is to preprocess the environment in an offline phase to allow for fast planning times online.
+%
+Alternatively, we could attempt to precompute for each start and goal pair a robot path.
+However, as the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable in high-dimensional configuration spaces.
+Thus, we need to balance memory constraints while providing provable real-time query times.
+
+\begin{figure}[tb]
+  \centering
+    \includegraphics[width=0.35\textwidth]{PR2.jpg}
+    % \vspace{-2mm}
+  \caption{
+  Motivating scenario---a robot (PR2) picking up objects from a conveyor belt.
+}
+    \label{fig:PR2}
+% \vspace{-6mm}
+\end{figure}
 
 %4. What have others done?
+As we detail in Sec.~\ref{sec:rel}, there has been intensive work 
+for fast online planning~\cite{LA18} and 
+for learning from experience in known environments~\cite{PCCL12,PDCL13,BAG12,CSMOC15}.
+Similarly, compressing precomputed data structures in the context of motion-planning is a well-studied problem with efficient algorithms~\cite{SSAH14,DB14}.
+%5. What's missing?
+However, to the extent of our knowledge, there is no approach that can \emph{provably guarantee} that a solution will be found to \emph{any} query with bounds on planning time and using a low memory footprint.
+
+%6. What is our ONE key insight?
+Our key insight is that given any state $s$, we can efficiently compute a set of states for which a greedy search towards~$s$ is collision free.
+Importantly, the runtime-complexity of such a greedy search is bounded and there is no need to perform computationally-complex collision-detection operations. 
+This insight allows us to generate offline a small set of so-called ``attractor vertices'' together with a path between each attractor state and the goal.
+In the query phase, a path is generated by performing a greedy search to an attractor state followed by the precomputed path to the goal.
+
+% combine a precomputed library~$\calL$ of paths between \emph{several} start and goal configurations together with a method to connect \emph{any} start and goal configuration to a path in~$\calL$ \emph{without} having to perform collision detection.
+%This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which is in the order of milliseconds for a seven DOF manipulator.
+
+
+%7. How do we compare against the state of the art?
+We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2})
+and demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a little memory footprint if 0.2 Mbs and while guaranteeing a maximal query time of less than 4 milliseconds.
+
+%8. What are our contributions?
+%9. What are our limitations?
+
+\section{Related work}
+\label{sec:rel}
+
 One way to preprocess the environment is using the \textsf{PRM} algorithm~\cite{kavraki1996probabilistic}.
 Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the source and goal to the roadmap. 
 Query times can be significantly sped up by further preprocessing the roadmaps using landmarks~\cite{paden2017landmark}.
 Unfortunately, there is no guarantee that a query can be connected to the roadmap as \textsf{PRM} only provides \emph{asymptotic} guarantees~\cite{KKL98}.
 Furthermore, this connecting phase requires running a collision-detection algorithm which is typically considered the computational bottleneck in many motion-planning algorithms~\cite{L06}.
-
-{\color{blue} Cite experience graphs in the context of learning from previous planning episodes. Although the e-graph heuristic speeds up the search but 1. the e-graph heuristic computation itself is expensive 2. the size of e-graph keeps growing and there is no systematic way of maintaing a sparse e-graph.}
 
 Recently, Lehner and  Albu{-}Sch{\"{a}}ffer~\cite{LA18} suggest the repetition roadmap to extend the \textsf{PRM} for the case of multiple highly-similar scenarios.
 While their approach exhibits significant speedup in computation time, it still suffers from the previously-mentioned shortcomings.
@@ -119,58 +154,51 @@ However this requires designing robot-specific
 circuitry~\cite{MFQSK16}
 or limiting the approach to standard manipulators~\cite{YMILV18}.
 
-An alternative approach is to precompute a set of complete paths into a library and given a query, attempt to match complete paths
+An alternative approach to address our problem is to precompute a set of complete paths into a library and given a query, attempt to match complete paths
 from the library to the new query~\cite{berenson2012robot,jetchev2013fast}.
-Unfortunately, this approach also cannot provide any of the guarantees required by our applications.
+Using paths from previous search episodes (also known as using experience) has also been an active line of work~\cite{PCCL12,PDCL13,BAG12,CSMOC15}.
+Some of these methods have been integrated with sparse motion-planning roadmaps (see e.g.,~\cite{SSAH14,DB14}) to reduce the memory footprint of the algorithm.
+Unfortunately, non of the mentioned algorithms provide any of the guarantees required by our applications.
 
 Our work bares resemblance to previous work on 
 subgoal graphs~\cite{UK17,UK18} and to real-time planning~\cite{KL06,KS09,K90}.
 However, in the former, the entire configuration space is preprocessed in order to efficiently answer queries between \emph{any} pair of states which deems it applicable only to low-dimensional spaces.
 {\color{blue} Also their $connect$ step is expensive as it requires a Dijkstra's like search to connect to the subgoal graph.} Similarly, in the latter, to provide guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
 
-{\color{blue} 
-More citations:\\
-1. Composition of local potential functions for global robot control and navigation.\\
-2. Integrated Planning and Control for Convex-bodied Nonholonomic Systems using Local Feedback Control Policies.
 
-I remember Max mentioning this work once, I haven't read these papers thoroughly though (one of these is a thesis doc). My understanding is that they have a similar idea of constructing these attractions "funnels" which we call subregions. They are using this idea in the controls world while we are doing planning.
+Finally, our notion of attractor states bares resemblance to control-based methods that  ensure safe operation over local regions of the free configuration space~\cite{CRC03,CCR06}.
+These regions are then used within a high-level motion planner to compute collision-free paths.
 
-3. LQR-Trees: Feedback Motion Planning
-on Sparse Randomized Trees \\
-This also seems to be a similar idea from the controls community.
+% 
+%\begin{itemize}
+%	\item Sampling-based roadmaps
+%		\begin{itemize}
+%			\item PRM
+%			\item Improve query using landmarks~\cite{paden2017landmark}.
+%			\item Repetition roadmap~\cite{LA18} 
+%		\end{itemize}
+%	\item Minimize CD time
+%		\begin{itemize}
+%			\item robot-specific
+%circuitry~\cite{MFQSK16}
+%			\item limiting the approach to standard manipulators~\cite{YMILV18}.
+%		\end{itemize}
+%	\item Subgoal graphs
+%	\item Experience 
+%		\begin{itemize}
+%			\item E-graphs~\cite{PCCL12,PDCL13}
+%			\item THUNDER~\cite{CSMOC15}
+%		\end{itemize}
+%	\item Control-based funneling
+%		\begin{itemize}
+%			\item ensure safe operation over local regions of the free configuration space;~\cite{CRC03,CCR06}
+%			\item  a method of composing
+%simple control policies, applicable over a limited region in a dynamical system’s free space, such that the resulting composition completely solves the navigation and contro~\cite{CRC03}
+%		\end{itemize}
+%%	\item Compressing roadmaps~\cite{SSAH14,DB14}
+%\end{itemize}
 
-These are all well cited papers. You might want to skim through these to get the right context but I think they are relevant.
 
-4. Experience-based planning with sparse roadmap spanners \\
-}
-
-\begin{figure}[tb]
-  \centering
-    \includegraphics[width=0.25\textwidth]{PR2.jpg}
-    % \vspace{-2mm}
-  \caption{
-  Motivating scenario---a robot (PR2) picking up objects from a conveyor belt.
-}
-    \label{fig:PR2}
- \vspace{-6mm}
-\end{figure}
-
-%5. What's missing?
-
-%6. What is our ONE key insight?
-Our key insight is to combine a precomputed library~$\calL$ of paths between \emph{several} start and goal configurations together with a method to connect \emph{any} start and goal configuration to a path in~$\calL$ \emph{without} having to perform collision detection.
-This insight allows us to provide \emph{provable bounds} on the time to solve motion-planning queries which is in the order of milliseconds for a seven DOF manipulator.
-
-{\color{blue} We need to redo this para. The workshop reviewer also said that it's unclear}
-
-%7. How do we compare against the state of the art?
-We evaluate our approach in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2})
-and demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a little memory footprint if 0.2 Mbs and while guaranteeing a maximal query time of less than 4 milliseconds.
-
-{\color{blue} Split this section into Intro and Related work}
-
-%8. What are our contributions?
-%9. What are our limitations?
 
 \section{Algorithm Framework}
 %In this section we describe our algorithmic framework. We start (Sec.~\ref{sec:pdef}) by formally defining our problem and continue...
@@ -205,6 +233,8 @@ These assumptions allow us to establish strong theoretical properties regarding 
 within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_\calS$. Proofs are omitted due to lack of space. 
 
 \subsection{Key Idea}
+{\color{blue} Add a figure that demonstrates the complete approach.}
+
 Our planner comprises of a preprocessing and a query phase. 
 In the preprocessing phase, $G_\calS$ is decomposed into two finite  sets of (possibly overlapping) subregions $\calR$ and~$\hat{\calR}$.
 Subregions in $\hat{\calR}$ only contain states that are in collision.
@@ -454,6 +484,7 @@ Note that at no point  do we need to perform collision checking in the query pha
 % which makes the query phase highly efficient.
 
 \section {Analysis}
+{\color{blue} This is wrong unless we talk about tie breaking. I don't think that tie breaking is an implementation detail and we should mention it in the prev. section}
 
 \begin{lemma}
 \label{lemma:1}
@@ -494,6 +525,8 @@ Alg. ~\ref{alg:2} returns the maximum radius $r_i$ for a subregion $R_i$ within 
 \end{proof} 
 
 \subsection{Time Complexity of Query Phase}
+{\color{blue} Add branching factor.}
+
 The query time comprises of 
 (i)~finding the containing subregion $R_i$ 
 and
@@ -539,25 +572,7 @@ We also bootstrap \textsf{PRM} with 20 goal states from~$G$. Note that the worst
  \section{Conclusion}
 We proposed a preprocessing-based motion planning algorithm that provides provable real-time performance guarantees for repetitive tasks and showed preliminary results. We aim to perform experiments on the hardware with the conveyor setup to demonstrate the efficiency of our planner on a real world system. Moreover on the theoretical side, we aim to provide guarantees on the solution quality.
 
-% \begin{figure}[tb]
-%   \centering
-%     \includegraphics[width=0.20\textwidth]{simulation3.png}
-%     % \vspace{-2mm}
-%   \caption{
-%   Experimental setup---The grid (in blue) depict the 3D projection of the goal region $G_\calS$.
-% }
-%     \label{fig:sim}
-%  \vspace{-8mm}
-% \end{figure}
-
-
-
-%\section{Conclusion}
-%Proofs
-%
-%Computational complexity
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{aaai}
 \bibliography{references}
 

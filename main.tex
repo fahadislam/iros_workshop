@@ -335,7 +335,7 @@ $\calR, \calL$
             \Comment{$s$ is not covered}
 				\State $\sAttract \leftarrow s$               
 				\label{alg:1:attract} 
-                \State $\pi_i$ = \textsc{PlanPath}($\sAttract , \sStart$);
+                \State $\pi_i$ = \textsc{PlanPath}($\sAttract , \sStart$);	\label{alg:1:pp}
                 \hspace{2mm }
                 $\calL \leftarrow \calL \cup \{ \pi_i \}$  \label{alg:1:path}
                 \State $(\text{OPEN}, r_i) \leftarrow$ \textsc{ComputeReachability}($\sAttract$) \label{alg:1:cr}
@@ -539,7 +539,7 @@ A state $s$ is in $S_{\text{reachable}}$ iff $h(s, \sAttract) < r_i$.
 
 \begin{proof}
 Alg.~\ref{alg:2} orders the nodes to be inserted to $S_{\text{reachable}}$ according to $h(s, \sAttract)$ (Line~\ref{alg:2:OPEN}).
-As our heuristic function is weakly monotonic (Assumption~\textbf{A2}), the value of $r_i$ monotonically increases as the algorithm adds sates to $S_{\text{reachable}}$ (Line~\ref{alg:2:rad}).
+As our heuristic function is weakly monotonic (Assumption~\textbf{A2}), the value of $r_i$ monotonically increases as the algorithm adds states to $S_{\text{reachable}}$ (Line~\ref{alg:2:rad}).
 Thus, for every state $s \in S_{\text{reachable}}$, we have that $h(s, \sAttract) < r_i$.
 
 For the opposite direction, assume that there exists a state $s \notin S_{\text{reachable}}$ such that $h(s, \sAttract) \leq r_i$.
@@ -650,35 +650,28 @@ Having said that, this may come at the price of increasing the number of regions
 
 \section{Evaluation}
 \label{sec:eval}
-\begin{table}[tb]
+\begin{table*}[t]
   % \begin{center}
-    \resizebox{\linewidth}{!}{%
-      \begin{tabular}{ l | c c c c}
-         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & Our method \\
+    \resizebox{\textwidth}{!}{%
+      \begin{tabular}{ l | c c c  c c c  c c c  c}
+         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & \textsf{RRT} (T) & \textsf{RRT} (2T) & \textsf{RRT} (4T) & \textsf{E-graph} & Our method \\
        \hline
-       Planning time [ms]& 20.2 (28.2) & 21.8 (34.1) & 22.9 (31.9) & 0.48 (1.01)\\
-       % Planning time [ms]& 6.8 (12.2) & 7.2 (18.0) & - (-) & 0.48 (1.01)\\
-       Success rate [$\%$] & 92 & 97 & 100 & 100 \\
-       % Success rate [$\%$] & 90 & - & - & 100 \\
+       Planning time [ms]& - (-) & - (-) & - (-) & - (-) & - (-) & - (-) & - (-) & - (-)\\
+       Success rate [$\%$] & - & - & - & - & - & - & - & - \\
+       Memory usage [Mb] & - & - & - & - & - & - & - & - \\
       \end{tabular}
   }
-    \caption{Experimental results comparing our method with \textsf{PRM}. The table shows the mean/worst-case planning times and success rates for our method and for \textsf{PRM} preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 984 seconds).}
+    \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,000 seconds). Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.}
     \label{tab:stats}
   % \end{center}
 % \vspace{-6mm}
-\end{table}
+\end{table*}
 
-We evaluated our algorithm by getting some preliminary results on the PR2 robot for the single-arm (7 DOF) planning problem. The task here is to repeatedly pick up objects from a conveyor belt and put them in a bin. 
-We define the task-relevant goal region~$G$ by bounding the position and orientation of the end effector. 
+We evaluated our algorithm on the PR2 robot for the single-arm (7 DOF) motion planning problem. The task here is to pick up objects from the cubby shelf and drop them off to some fixed location. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop of location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions of the end effector within the cubby shelf.  
 
-%As mentioned, our method allows to guarantee bounds on the query time. The worst-case query time is bounded using the radius of the largest subregion and the total number of subregions that cover $G$. 
-%After the preprocessing stage we can compute it by adding the lookup time for iterating over all the regions, and the time that the greedy search takes to reach the attractor from a goal state lying on the boundary of the largest subregion.
+We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. Amongst the multi-query planners we experimented with \textsf{PRM}, a multi-query version of \textsf{RRT} and the E-graph planner. In case of \textsf{PRM}, for fairness we precomputed the paths from all the nodes in~$G$ to $s_{\text{start}}$. The query stage only required \textsf{PRM}'s connect operation. For \textsf{RRT}, we precomputed \textsf{RRT} rooted at the start state and grown towards~$G$. Similar to \textsf{PRM}, the query step attempted connecting to $k$ nearest neighbors in the \textsf{RRT} tree. For both of these planners we also added a goal-region bias by sampling from~$G$, five percent of the time\footnote{We used OMPL for comparisons with the sampling-based planners and modified the implementations as per needed.} . For single-query planning, we only report the results for \textsf{RRT-Connect} as it has the fastest run times from our experience. For \textsf{PRM} and \textsf{RRT}, if the connect operation fails for a query, we considered that case as a failure. For \textsf{RRT-Connect}, we set a timeout of 10 seconds.
 
-%\subsection{Results}
-We compared our approach with the \textsf{PRM} algorithm in terms of success rate and planning times (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. 
-Preprocessing (Alg.~\ref{alg:1}) took 984 seconds and returned 1,865 subregions. For a fair comparision, for \textsf{PRM} the paths from all the nodes in~$G$ to $s_{\text{start}}$ were precomputed. 
-In the query phase if \textsf{PRM}'s connect operation fails for a given query, we consider it a failure. 
-We also bootstrap \textsf{PRM} with 20 goal states from~$G$. Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.
+For our method, preprocessing (Alg.~\ref{alg:1}) took 1,000 seconds and returned 1,000 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT-Connect}.
  % \vspace{-5mm}
 
  \section{Conclusion}

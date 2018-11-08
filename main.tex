@@ -493,18 +493,30 @@ Note that at no point  do we need to perform collision checking in the query pha
 
 \subsection{Implementation details}
 \label{subsec:impl}
-Recall that in the query phase we iterate over all regions to find a region that covers \sGoal. 
+
+\begin{enumerate}
+\item[\textbf{1.}] Recall that in the query phase we iterate over all regions to find a region that covers \sGoal. 
 In the worst case we will have to go over all regions.
 However, as we will see in our evaluation (Sec.~\ref{sec:eval}), our algorithm typically covers most of the goal region $G_\calS$ using a few very large regions (namely, with a large radii $r_i$) and the rest of $G_\calS$ is covered by a large number of very small regions.
 
-Thus, if we order our regions according to their corresponding radii, there is a higher chance of finding a covering region faster. While this optimization does not change our worst-case analysis (Sec.~\ref{sec:analysis}), we observe that in practice (Sec.~\ref{sec:eval}) it can dramatically speed up our query times.
+Thus, if we order our regions according to their corresponding radii, there is a higher chance of finding a covering region faster. While this optimization does not change our worst-case analysis (Sec.~\ref{sec:analysis}), it can speed up the query time in case the number of subregions is very large.
+
+\end{enumerate}
+
+\begin{enumerate}
+ \item[\textbf{2.}] The preprocessing time for our method is predominantly consumed in precomputing the library of paths $\calL$. To optimise for the preprocessing time, we do the following trick. We initially set a small timeout for the planner that we use for precomputing paths. The attractor states for which the planner fails to find a path to $\sStart$, we mark them as $\textit{bad}$ attractors and do not grow the subregions from them. We procedurally remove these bad attractors from the list as the other subregions cover them. In practice most of the bad attractor states automatically get covered by other subregions. When Alg.~\ref{alg:1} terminations we reload the valid list $V$ with the remaining bad attractors and rerun (Alg.~\ref{alg:1}) but this time with a large timeout for the planner. We can also increase the timeout with smaller increments and run Alg.~\ref{alg:1} iteratively until there are no more bad attractors (assuming that there exists a solution for each goal state $\in$ $G_\calS$).
+\end{enumerate}
+
+\begin{enumerate}
+ \item[\textbf{3.}] To reduce the number of precomputed regions we remove the redundant ones after the preprocessing Alg.~\ref{alg:1} completes. In order to do that, we iterate through all the subregions and remove the ones which are fully contained within any other subregion. Note that this is possible the way Alg.~\ref{alg:1} is designed. This reduces the query complexity as well as the memory consumtion.
+\end{enumerate}
 
 \section {Analysis}
 \label{sec:analysis}
 In this section we formally prove that 
 our algorithm is correct (Sec.~\ref{subsec:correct}) and 
-analyze its computational complexity
-(Sec.~\ref{subsec:complexity}).
+analyze its computational complexit
+y(Sec.~\ref{subsec:complexity}).
 
 \subsection{Correctness}
 \label{subsec:correct}
@@ -656,9 +668,9 @@ Having said that, this may come at the price of increasing the number of regions
       \begin{tabular}{ l | c c c  c c c  c c c  c  c}
          & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & \textsf{RRT} (T) & \textsf{RRT} (2T) & \textsf{RRT} (4T) & \textsf{E}-graph & \textsf{RRT}-Connect & Our method \\
        \hline
-       Planning time [ms]& 15.2 (25.5) & - (-) & - (-) & 15.6 (24.9) & 16.8 (28.0) & 16.9 (30.1) & - (-) & 459.1 (3063.65) & 0.42 (0.7)\\
-       Success rate [$\%$]& 98 & - & - & 90.5 & 88 & 89.5 & - & 98 & 100\\
-       Memory usage [Mb] & 724 & - & - & 118 & 183 & 284 & - & - & 7.8\\
+       Planning time [ms]& 15.2 (25.5) & 16.8 (57.2) & - (-) & 15.6 (24.9) & 16.8 (28.0) & 16.9 (30.1) & - (-) & 459.1 (3063.65) & 0.42 (0.7)\\
+       Success rate [$\%$]& 98 & 100 & - & 90.5 & 88 & 89.5 & - & 98 & 100\\
+       Memory usage [Mb] & 590 & 790 & - & 118 & 183 & 284 & - & - & 7.8\\
       \end{tabular}
   }
     \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,569 seconds). Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.}
@@ -673,7 +685,7 @@ The search is done on an implicit graph $G_\calS$ constructed by using $\textit{
 
 We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 randomly sampled goal states from $G$ (We sample 100 goals each from the left and right side of the shelf). Amongst the multi-query planners we experimented with \textsf{PRM}, a multi-query version of \textsf{RRT} and the E-graph planner. In case of \textsf{PRM}, for fairness we precomputed the paths from all the nodes in~$G$ to $s_{\text{start}}$. The query stage only required \textsf{PRM}'s connect operation. For \textsf{RRT}, we precomputed \textsf{RRT} rooted at the start state and grown towards~$G$. Similar to \textsf{PRM}, the query step attempted connecting to $k$ nearest neighbors in the \textsf{RRT} tree. For both of these planners we also added a goal-region bias by sampling from~$G$, five percent of the time\footnote{We used OMPL for comparisons with the sampling-based planners and modified the implementations as per needed.} . For single-query planning, we only report the results for \textsf{RRT}-Connect as it has the fastest run times from our experience. For \textsf{PRM} and \textsf{RRT}, if the connect operation fails for a query, we considered that case as a failure. For \textsf{RRT}-Connect, we set a timeout of 10 seconds.
 
-For our method, preprocessing (Alg.~\ref{alg:1}) took 1,569 seconds and returned 504 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT}-Connect. The preprocessing time for our methods is predominantly consumed in precomputing the library of paths $\calL$. The planning times of \textsf{RRT}-Connect show a very high variance ((see Table~\ref{tab:stats})). To optimise for the preprocessing time, we do the following trick. We initially set a small timeout (10 seconds) for \textsf{RRT}-Connect. The attractor states for which \textsf{RRT}-Connect fails to find a path to $\sStart$, we mark them as $\textit{bad}$ attractors and do not grow the subregions from them. We procedurally remove these bad attractors from the list as the other subregions cover them. When Alg.~\ref{alg:1} terminations we reload the valid list $V$ with all the remaining bad attractors and rerun (Alg.~\ref{alg:1}) but this time with a large timeout (60 seconds) for \textsf{RRT}-Connect. By doing so the algorithm finishes successfully without having any remaining bad attractor.
+For our method, preprocessing (Alg.~\ref{alg:1}) took 1,569 seconds and returned 504 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT}-Connect. For the first run of Alg.~\ref{alg:1}, we set the timeout to be 10 seconds and for the second run (after reloading $V$ with the bad attractors), we set the timeout to be 60 seconds. By doing so the algorithm finishes successfully with having no remaining bad attractors.
 
 From the results we observe that our method shows a speedup of over tenfold in query time as compared to other multi-query planners primarily because it doesn't require collision checking. RRT-Connect being a single-query planner is orders of magnitude slower. {\color{blue} continued.. (will finish after I get complete results)}
 

@@ -653,15 +653,15 @@ Having said that, this may come at the price of increasing the number of regions
 \begin{table*}[t]
   % \begin{center}
     \resizebox{\textwidth}{!}{%
-      \begin{tabular}{ l | c c c  c c c  c c c  c}
-         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & \textsf{RRT} (T) & \textsf{RRT} (2T) & \textsf{RRT} (4T) & \textsf{E-graph} & Our method \\
+      \begin{tabular}{ l | c c c  c c c  c c c  c  c}
+         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & \textsf{RRT} (T) & \textsf{RRT} (2T) & \textsf{RRT} (4T) & \textsf{E}-graph & \textsf{RRT}-Connect & Our method \\
        \hline
-       Planning time [ms]& - (-) & - (-) & - (-) & - (-) & - (-) & - (-) & - (-) & - (-)\\
-       Success rate [$\%$] & - & - & - & - & - & - & - & - \\
-       Memory usage [Mb] & - & - & - & - & - & - & - & - \\
+       Planning time [ms]& 15.2 (25.5) & - (-) & - (-) & 15.9 (31.4) & - (-) & - (-) & - (-) & 459.1 (3063.65) & 0.42 (0.7)\\
+       Success rate [$\%$]& 98 & - & - & 90.5 & - & - & - & 98 & 100\\
+       Memory usage [Mb] & 724 & - & - & 118 & - & - & - & - & 7.8\\
       \end{tabular}
   }
-    \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,000 seconds). Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.}
+    \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,569 seconds). Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 4 milliseconds for this environment.}
     \label{tab:stats}
   % \end{center}
 % \vspace{-6mm}
@@ -669,10 +669,12 @@ Having said that, this may come at the price of increasing the number of regions
 
 We evaluated our algorithm on the PR2 robot for the single-arm (7 DOF) motion planning problem. The task here is to pick up objects from the cubby shelf and drop them off to some fixed location. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop of location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions of the end effector within the cubby shelf.  
 
-We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. Amongst the multi-query planners we experimented with \textsf{PRM}, a multi-query version of \textsf{RRT} and the E-graph planner. In case of \textsf{PRM}, for fairness we precomputed the paths from all the nodes in~$G$ to $s_{\text{start}}$. The query stage only required \textsf{PRM}'s connect operation. For \textsf{RRT}, we precomputed \textsf{RRT} rooted at the start state and grown towards~$G$. Similar to \textsf{PRM}, the query step attempted connecting to $k$ nearest neighbors in the \textsf{RRT} tree. For both of these planners we also added a goal-region bias by sampling from~$G$, five percent of the time\footnote{We used OMPL for comparisons with the sampling-based planners and modified the implementations as per needed.} . For single-query planning, we only report the results for \textsf{RRT-Connect} as it has the fastest run times from our experience. For \textsf{PRM} and \textsf{RRT}, if the connect operation fails for a query, we considered that case as a failure. For \textsf{RRT-Connect}, we set a timeout of 10 seconds.
+We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 100 uniformly sampled goal states from $G$. Amongst the multi-query planners we experimented with \textsf{PRM}, a multi-query version of \textsf{RRT} and the E-graph planner. In case of \textsf{PRM}, for fairness we precomputed the paths from all the nodes in~$G$ to $s_{\text{start}}$. The query stage only required \textsf{PRM}'s connect operation. For \textsf{RRT}, we precomputed \textsf{RRT} rooted at the start state and grown towards~$G$. Similar to \textsf{PRM}, the query step attempted connecting to $k$ nearest neighbors in the \textsf{RRT} tree. For both of these planners we also added a goal-region bias by sampling from~$G$, five percent of the time\footnote{We used OMPL for comparisons with the sampling-based planners and modified the implementations as per needed.} . For single-query planning, we only report the results for \textsf{RRT}-Connect as it has the fastest run times from our experience. For \textsf{PRM} and \textsf{RRT}, if the connect operation fails for a query, we considered that case as a failure. For \textsf{RRT}-Connect, we set a timeout of 10 seconds.
 
-For our method, preprocessing (Alg.~\ref{alg:1}) took 1,000 seconds and returned 1,000 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT-Connect}.
- % \vspace{-5mm}
+For our method, preprocessing (Alg.~\ref{alg:1}) took 1,569 seconds and returned 504 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT}-Connect. 
+From the results we observe that our method shows a speedup of over tenfold in query time as compared to other multi-query planners primarily because it doesn't require collision checking. RRT-Connect being a single-query planner is orders of magnitude slower.
+
+
 
  \section{Conclusion}
 We proposed a preprocessing-based motion planning algorithm that provides provable real-time performance guarantees for repetitive tasks and showed preliminary results. We aim to perform experiments on the hardware with the conveyor setup to demonstrate the efficiency of our planner on a real world system. Moreover on the theoretical side, we aim to provide guarantees on the solution quality.

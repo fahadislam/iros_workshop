@@ -49,7 +49,7 @@
 \newtheorem{definition}{Definition}
 \newtheorem{cor}{Corollary}
 
-\newcommand{\update}[1]{{\color{magenta}#1}}  % highlight for review by Honeywell
+\newcommand{\update}[1]{{\color{magenta}#1}}  
 %%%%%%%%%%%%%%%%%%%
 
 \frenchspacing  %Required
@@ -234,12 +234,43 @@ These assumptions allow us to establish strong theoretical properties regarding 
 within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_\calS$. 
 %Proofs are omitted due to lack of space. 
 
+%
+%\newpage
+%a
+%\newpage
+%\update{The way Alg.~\ref{alg:2} is written (this is where we use the following assumption), we expand a subregion out side of the goal region. This can be good or bad, it can waist a lot of time as we are ``learning'' parts of the C-space that we don't care about but could allow us to have larger subregions.}
+%%
+%
+%Assumption \textbf{A2}  The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$.
+%
+%\textbf{Option 1:}
+%Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+%  \begin{center}
+%    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1) \cap G_\calS} h(s_1', s_2)$.
+%  \end{center}
+%\update{As Max pointed out, this means that we have some requirement over the goal region which is not ideal.
+%However, this simplifies Alg.~\ref{alg:2} and is actually what we implemented.}
+%
+%\textbf{Option 2:}
+%Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+%  \begin{center}
+%    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$.
+%  \end{center}
+%\update{Here, the requirements on the heuristic function is less strict. We have two options for this case:
+%(1) change the notion of a greedy successor (def~\ref{def:greedy-suc} to ensure that the greedy successor is within)}
+
+
+
+  Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors (also belonging to $G_\calS$) must have a heuristic value less than or equal to its heuristic value.
+	Note that this assumption does not imply  that~$G$ is entirely collision free.
+
 \subsection{Key idea}
 \label{sec:key}
 Our algorithm relies heavily on the notion of a greedy search.  Thus, before we provide an overview of our algorithm, we formally define the terms greedy successor and greedy search.
 
 \vspace{2mm}
 \begin{definition}
+\label{def:greedy-suc}
 	Let $s$ be some state and $h(\cdot)$ be some heuristic function.
 	A state $s' \in \text{Succ}(s)$ is said to be a \emph{greedy} successor of $s$ according to $h$ if it has the minimal $h$-value among all of $s$'s successors.
 \end{definition}
@@ -425,7 +456,7 @@ The algorithm terminates when the search pops a state which is valid but does no
 \begin{algorithmic}[1]
 \Procedure{ComputeReachability}{$\sAttract$}
 %\Procedure{ComputeReachability}{$\sAttract, r_{\text{max}}$}
-\State $S_{\text{reachable}} \leftarrow \{\sAttract\}$ \Comment{Reachable set} \label{alg:2:reachable}
+\State $S_{\text{reachable}} \leftarrow \{\sAttract\}$ \Comment{reachable set} \label{alg:2:reachable}
 \State OPEN $\leftarrow \{$Preds($\sAttract$)$\}$  \Comment{key: $h(s,\sAttract)$} \label{alg:2:OPEN}
 \State CLOSED $\leftarrow \emptyset$
 \State $r_i \leftarrow 0$

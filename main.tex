@@ -10,6 +10,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%
 \usepackage[bookmarks=true]{hyperref}
+%\usepackage[draft]{hyperref}
 \usepackage{graphicx}
 \usepackage[font=footnotesize]{subcaption}
 \usepackage[font=footnotesize]{caption}
@@ -20,6 +21,7 @@
 \usepackage{wrapfig}
 \usepackage{color}
 \usepackage{graphicx}
+\usepackage{enumitem}
 
 \usepackage{algorithm}
 \usepackage{algorithmicx}
@@ -57,6 +59,17 @@
   \pdfinfo{
 /Title (Provable Infinite-Horizon Real-Time Planning for Repetitive Tasks)}
 \setcounter{secnumdepth}{2}  
+
+\hypersetup{letterpaper,bookmarksopen,bookmarksnumbered,
+pdfpagemode=UseOutlines,
+colorlinks=true,
+linkcolor=blue,
+anchorcolor=blue,
+citecolor=blue,
+filecolor=blue,
+menucolor=blue,
+urlcolor=blue
+}
  \begin{document}
 % The file aaai.sty is the style file for AAAI Press 
 % proceedings, working notes, and technical reports.
@@ -76,12 +89,12 @@
 
 \begin{abstract}
 In manufacturing and automation settings, robots often have to perform highly-repetitive manipulation tasks in structured environments. 
-In this work we are interested in the settings where the tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
+In this work we are interested in settings where tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
 Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the configuration-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is extremely challenging.
 % Moreover, as far as we are aware of, none of the general-purpose algorithms come with \emph{provable} guarantees on the real-time performance.
-{\color{blue}While there are planners that guarantee real-time performance by limiting the planning horizon, we are not aware of general purpose planners capable of doing it for infinite horizon (i.e planning to the goal).}
+While there are planners that guarantee real-time performance by limiting the planning horizon, we are not aware of general purpose planners capable of doing it for infinite horizon (i.e planning to the goal).
 %
 To this end, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase.
 We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm, while provably guaranteeing a maximum query time of less than 3 milliseconds.
@@ -91,13 +104,19 @@ We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold i
 %1. What is the problem?
 We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times.
 %2. Why is it relevant?
-\update{
-As a running example, consider the problem of a robot picking up objects from a high-speed conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
+As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is typically currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
 While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
-Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the conveyor belt or in different orientations.
-Fast planning times immediately correspond to faster unloading capabilities. 
-Moreover, if the planner cannot \emph{guarantee} to pick items from the conveyor in a timely manner, the system is required to account for missed items by e.g., additional conveyor belts that will redirect items back to the robot---a costly backup in terms of both time and space.
-}
+Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the shelf or in different orientations.
+Fast planning times immediately correspond to faster packing capabilities. 
+Moreover, if the planner cannot \emph{guarantee} to pick items from the shelf in a timely manner, the system is required to account for possible backlogs by e.g., adding more floor space for shelves that are queued and not being unpacked---a costly backup in terms of both time and space.
+
+%\update{
+%As a running example, consider the problem of a robot picking up objects from a high-speed conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
+%While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
+%Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the conveyor belt or in different orientations.
+%Fast planning times immediately correspond to faster unloading capabilities. 
+%Moreover, if the planner cannot \emph{guarantee} to pick items from the conveyor in a timely manner, the system is required to account for missed items by e.g., additional conveyor belts that will redirect items back to the robot---a costly backup in terms of both time and space.
+%}
 
 %3. Why is it hard?
 Clearly, every time a task is presented to the robot, it can compute a desired path.
@@ -114,8 +133,7 @@ Thus, we need to balance memory constraints while providing provable real-time q
     \includegraphics[width=0.35\textwidth]{PR2.png}
     % \vspace{-2mm}
   \caption{
-  \update{
-  Motivating scenario---a robot (PR2) picking up objects from a conveyor belt.}
+  Motivating scenario---a robot (PR2) picking up objects from shelves and placing them into a bin.
 }
     \label{fig:PR2}
 % \vspace{-6mm}
@@ -129,13 +147,15 @@ Similarly, compressing precomputed data structures in the context of motion-plan
 %5. What's missing?
 However, to the extent of our knowledge, there is no approach that can \emph{provably guarantee} that a solution will be found to \emph{any} query with bounds on planning time and using a low memory footprint.
 
+%\vspace{8 mm}
+
 %6. What is our ONE key insight?
 \update{
 Our key insight is that given any state $s$, we can efficiently compute a set of states for which a greedy search towards~$s$ is collision free.
 Importantly, the runtime-complexity of such a greedy search is bounded and there is no need to perform computationally-complex collision-detection operations. 
 This insight allows us to generate in an offline phase a small set of so-called ``attractor vertices'' together with a path between each attractor state and the goal.
 In the query phase, a path is generated by performing a greedy search to an attractor state followed by the precomputed path to the goal.
-We describe our approach in Sec.~\ref{sec:alg} and analyze it in Sec.~\ref{sec:analysis}
+We describe our approach in Sec.~\ref{sec:alg} and analyze it in Sec.~\ref{sec:analysis}.
 }
 
 %7. How do we compare against the state of the art?
@@ -173,40 +193,8 @@ However, in the former, the entire configuration space is preprocessed in order 
 %{\color{blue} Also their $connect$ step is expensive as it requires a Dijkstra's like search to connect to the subgoal graph.} 
 Similarly, in the latter, to provide guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
 
-
 Finally, our notion of attractor states is similar to control-based methods that  ensure safe operation over local regions of the free configuration space~\cite{CRC03,CCR06}.
 These regions are then used within a high-level motion planner to compute collision-free paths.
-
-% 
-%\begin{itemize}
-%	\item Sampling-based roadmaps
-%		\begin{itemize}
-%			\item PRM
-%			\item Improve query using landmarks~\cite{paden2017landmark}.
-%			\item Repetition roadmap~\cite{LA18} 
-%		\end{itemize}
-%	\item Minimize CD time
-%		\begin{itemize}
-%			\item robot-specific
-%circuitry~\cite{MFQSK16}
-%			\item limiting the approach to standard manipulators~\cite{YMILV18}.
-%		\end{itemize}
-%	\item Subgoal graphs
-%	\item Experience 
-%		\begin{itemize}
-%			\item E-graphs~\cite{PCCL12,PDCL13}
-%			\item THUNDER~\cite{CSMOC15}
-%		\end{itemize}
-%	\item Control-based funneling
-%		\begin{itemize}
-%			\item ensure safe operation over local regions of the free configuration space;~\cite{CRC03,CCR06}
-%			\item  a method of composing
-%simple control policies, applicable over a limited region in a dynamical system’s free space, such that the resulting composition completely solves the navigation and contro~\cite{CRC03}
-%		\end{itemize}
-%%	\item Compressing roadmaps~\cite{SSAH14,DB14}
-%\end{itemize}
-
-
 
 \section{Algorithm Framework}
 \label{sec:alg}
@@ -220,15 +208,17 @@ We say that a configuration is valid (invalid) if the robot, placed in that conf
 We are given in advance a start configuration~$\sStart \in \calX$ and some goal region~$G \subset \calX$.
 In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
+Coming back to our motivating example of picking items from  shelves and placing them into a bin---the start configuration would be some predifined configuration above the bin where the robot can drop off the item and the goal region would be all possible placements of the robot's end effector that can grasp an object in one shelf.
+
 We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$
 and set $G_\calS := \calS \cap G$ to be the states that reside in the goal region.
 We make the following assumptions:
 
-\begin{enumerate}
-  \item[\textbf{A1}] $G_\calS$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_\calS$.
+\begin{enumerate}[label={\textbf{A\arabic*}}]
+  \item \label{assum:1} $G_\calS$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_\calS$.
 However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
   
-  \item[\textbf{A2}] The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+  \item \label{assum:2} The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
 
   \begin{center}
     $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1) \cap G_\calS} h(s_1', s_2)$.
@@ -236,7 +226,7 @@ However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
   Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors (also belonging to $G_\calS$) must have a heuristic value less than or equal to its heuristic value.
 	Note that this assumption does not imply  that~$G$ is entirely collision free.
 
-  \item[\textbf{A3}] The planner has access to a tie breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is antisymmetric, transitive, and a connex relation.} over all states with the same heuristic value.
+  \item \label{assum:3} The planner has access to a tie breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is antisymmetric, transitive, and a connex relation.} over all states with the same heuristic value.
   % to a given state.
   \end{enumerate}
 
@@ -255,9 +245,9 @@ Our algorithm relies heavily on the notion of a greedy search.  Thus, before we 
 \end{definition}
 Note that 
 if $h$ is weakly monotone 
-(Assumption~\textbf{A2}) 
+(Assumption~\ref{assum:2}) 
 and we have some tie-breaking rule
-(Assumption~\textbf{A3}), then the greedy successor of a state exists and is unique.  
+(Assumption~\ref{assum:3}), then the greedy successor of a state exists and is unique.  
 In the rest of the text, when we use the term greedy successor, we assume that it is unique.
 
 \vspace{2mm}
@@ -271,9 +261,9 @@ Specifically, in the preprocessing phase, $G_\calS$ is decomposed into a finite 
 Each subregion $R_i \in \calR$ is a hyper-ball defined using a center which we refer to as the ``attractor state''~
 \sAttract and a radius $r_i$.
 These regions, which may contain invalid states, are constructed in such a way that the following two properties hold
-\begin{enumerate}
-  \item[\textbf{P1}] For any valid goal state $s_{\text{goal}} \in R_i \cap G_\calS$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path to \sAttract.
-  \item[\textbf{P2}] The union of all the subregions completely cover the valid states in $G_\calS$. 
+\begin{enumerate}[label={\textbf{P\arabic*}}]
+  \item \label{property:1} For any valid goal state $s_{\text{goal}} \in R_i \cap G_\calS$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path to \sAttract.
+  \item \label{property:2} The union of all the subregions completely cover the valid states in $G_\calS$. 
 		  Namely, $\forall s \in G_\calS~\text{s.t.}~s~\text{is valid}, \exists R \in \calR \ s.t. \ s \in R$.
 \end{enumerate}
 
@@ -303,7 +293,7 @@ For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_\calS$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from each \sAttract to~\sStart. 
 
 The algorithm covers~$G_\calS$ by iteratively finding a state $s$ not covered\footnote{Here, a state $s$ is said to be covered if there exists some region $R \in \calR$ such that $s \in R$.} by any region and computing a new region centered at $s$.
-To ensure that $G_\calS$ is complete covered (Property~\textbf{P2}) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
+To ensure that $G_\calS$ is complete covered (Property~\ref{property:1}) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
 We also construct regions of invalid states only $\hat{\calR}$ to efficiently store which invalid states have been considered.
 We start by initializing~$V$ with some random state in $G_\calS$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G_\calS$ is indeed covered.
 
@@ -405,7 +395,7 @@ $\calR, \calL$
 \end{figure}
 
 \subsubsection{Reachability Search}
-The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2} and Fig.~\ref{fig:alg2}) which we call a ``Reachability Search''. The algorithm maintains a set of \emph{reachable} states $S_{\text{reachable}}$ for which property \textbf{P1} holds.
+The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2} and Fig.~\ref{fig:alg2}) which we call a ``Reachability Search''. The algorithm maintains a set of \emph{reachable} states $S_{\text{reachable}}$ for which Property~\ref{property:1} holds.
 As we will see, this will ensure that in the query phase, we can run a greedy search from any reachable state $s \in S_{\text{reachable}}$ and it will terminate in the attractor state. 
 %
 The following definition formally captures the notion of a reachible state.
@@ -474,6 +464,8 @@ $h(s_{\text{goal}}, \sAttract) < r_i$.
 We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract (Lines~\ref{alg:3:greedy-call} and~\ref{alg:3:greedy-call-start}-~\ref{alg:3:greedy-call-end}). 
 The greedy path~$\pi_g$ is then appended to the corresponding precomputed path~$\pi_i \in \calL$ (Line~\ref{alg:3:return}). 
 Note that at no point  do we need to perform collision checking in the query phase.
+
+\textbf{Remark}: Throughout this section we assumed that the underlying graph is symmetric (namely if there is an edge between $s$ and $s'$, then there is an edge between $s'$ and $s$). This was done for ease of exposition. In the general case, we would have to alter our reachability search (Alg.~\ref{alg:2}) to consider the predecessors of a given state and not its successors (see, line~\ref{alg:2:greedy}). 
 
 \begin{algorithm}[t]
 \footnotesize
@@ -568,7 +560,7 @@ The base of the induction is trivial as the first state added to $S_{\text{reach
 A state $s$ is added to $S_{\text{reachable}}$ only if its greedy successor is in $S_{\text{reachable}}$ (Line~\ref{alg:2:greedy}) which by the induction hypothesis is reachable with respect to \sAttract.
 This implies by definition that $s$ is reachable with respect to \sAttract.
 %
-Note that this argument is true because the greedy successor of every state is unique (Assumption~\textbf{A3}).
+Note that this argument is true because the greedy successor of every state is unique (Assumption~\ref{assum:3}).
 \end{proof}
 
 \begin{lemma}
@@ -580,13 +572,13 @@ A state $s$ is in $S_{\text{reachable}}$ iff $h(s, \sAttract) < r_i$.
 
 \begin{proof}
 Alg.~\ref{alg:2} orders the nodes to be inserted to $S_{\text{reachable}}$ according to $h(s, \sAttract)$ (Line~\ref{alg:2:OPEN}).
-As our heuristic function is weakly monotonic (Assumption~\textbf{A2}), the value of $r_i$ monotonically increases as the algorithm adds states to $S_{\text{reachable}}$ (Line~\ref{alg:2:rad}).
+As our heuristic function is weakly monotonic (Assumption~\ref{assum:2}), the value of $r_i$ monotonically increases as the algorithm adds states to $S_{\text{reachable}}$ (Line~\ref{alg:2:rad}).
 Thus, for every state $s \in S_{\text{reachable}}$, we have that $h(s, \sAttract) < r_i$.
 
 For the opposite direction, assume that there exists a state $s \notin S_{\text{reachable}}$ such that $h(s, \sAttract) \leq r_i$.
 As $s\notin S_{\text{reachable}}$, Alg.~\ref{alg:2} terminated due to a node $s'$ that was popped from the open list with 
 $h(s', \sAttract) \geq r_i$.
-Again, using the fact that our heuristic function is weakly monotonic (Assumption~\textbf{A2}) we get a contradiction to the fact that $h(s, \sAttract) \leq r_i$
+Again, using the fact that our heuristic function is weakly monotonic (Assumption~~\ref{assum:2}) we get a contradiction to the fact that $h(s, \sAttract) \leq r_i$
 \end{proof}
 
 \begin{lemma}
@@ -708,7 +700,7 @@ Having said that, this may come at the price of increasing the number of regions
 
 We evaluated our algorithm on the PR2 robot for a single-arm (7 DOF) motion planning problem. The task here is to pick up objects from the cubby shelf (see Fig.~\ref{fig:PR2}) and drop them off to some fixed location. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop of location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions of the end effector within the cubby shelf.
 
-The search is done on an implicit graph $G_\calS$ constructed by using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end-effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. The heurstic function that we use (defined in Assumption~\textbf{A2}) is Euclidean distance in these 7 dimensions. The discretization we use for the graph $G_\calS$ is two~cm for the position axes, ten degrees for the Euler axes and five degrees for the redundant joint. 
+The search is done on an implicit graph $G_\calS$ constructed by using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end-effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. The heurstic function that we use (defined in Assumption~~\ref{assum:2}) is Euclidean distance in these 7 dimensions. The discretization we use for the graph $G_\calS$ is two~cm for the position axes, ten degrees for the Euler axes and five degrees for the redundant joint. 
 For this domain, 
 \update{we keep the orientation of the end effector fixed.
  (which significantly reduces the size of $G_\calS$) which only allow primitives in the position axes and for the redundant joint.}

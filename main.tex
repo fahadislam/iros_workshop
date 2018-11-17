@@ -221,10 +221,17 @@ We make the following assumptions:
 However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
   
   \item \label{assum:2} The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover the heuristic function should be $\textit{weakly-monotone}$ with respect to $G_\calS$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+%  \begin{center}
+%    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1) \cap G_\calS} h(s_1', s_2)$.
+%  \end{center}
   \begin{center}
-    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1) \cap G_\calS} h(s_1', s_2)$.
+    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$
+    and
+    $\arg \min \limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \in G_\calS$.
   \end{center}
+% Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors  that also belonging to $G_\calS$ must have a heuristic value less than or equal to its heuristic value.
  Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors  that also belonging to $G_\calS$ must have a heuristic value less than or equal to its heuristic value.
+ Moreover, the successor with minimal heuristic valies lies in the goal region.
 
 
   \item \label{assum:3} The planner has access to a tie breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is antisymmetric, transitive, and a connex relation.} over all states with the same heuristic value.
@@ -235,7 +242,7 @@ These assumptions allow us to establish strong theoretical properties regarding 
 within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_\calS$. 
 
 
-Assumption~\ref{assum:2} may be seen as restrictive, imposing that the goal region can not be of arbitrary structure. However, after we detail our algorithm, we sketch how we can slightly relax this assumption to be more realistic.
+Assumption~\ref{assum:2} may seem too restrictive, imposing that the goal region can not be of arbitrary structure. However, after we detail our algorithm (Sec.~\ref{subsec:alg}) and analyze its theoretical properties (Sec.~\ref{sec:analysis}), we sketch how we can slightly relax this assumption to be more realistic.
 %Proofs are omitted due to lack of space. 
 
 %
@@ -268,7 +275,7 @@ Assumption~\ref{assum:2} may be seen as restrictive, imposing that the goal regi
  
 \subsection{Key idea}
 \label{sec:key}
-Our algorithm relies heavily on the notion of a greedy search.  Thus, before we provide an overview of our algorithm, we formally define the terms greedy successor and greedy search.
+Our algorithm relies heavily on the notion of a greedy search.  Thus, we describe of our algorithm, we formally define the terms greedy successor and greedy search.
 
 \vspace{2mm}
 \begin{definition}
@@ -277,16 +284,16 @@ Our algorithm relies heavily on the notion of a greedy search.  Thus, before we 
 	A state $s' \in \text{Succ}(s)$ is said to be a \emph{greedy} successor of $s$ according to $h$ if it has the minimal $h$-value among all of $s$'s successors.
 \end{definition}
 Note that 
-if $h$ is weakly monotone 
+if $h$ is weakly monotone with respecte to $G_\calS$
 (Assumption~\ref{assum:2}) 
 and we have some tie-breaking rule
-(Assumption~\ref{assum:3}), then the greedy successor of a state exists and is unique.  
-In the rest of the text, when we use the term greedy successor, we assume that it is unique.
+(Assumption~\ref{assum:3}), then there every state has a greedy successor in the goal region and it is unique.  
+In the rest of the text, when we use the term greedy successor, we assume that it is unique and in $G_\calS$.
 
 \vspace{2mm}
 \begin{definition}
 	Given a heuristic function $h(\cdot)$,
-	an algorithm is said to be a \emph{greedy search} if for every state it returns its greedy succesor.
+	an algorithm is said to be a \emph{greedy search}	 if for every state it returns its greedy succesor.
 \end{definition}
 
 Our key insight is to precompute in an offline phase regions where a greedy search to a certain state is guaranteed to be collision free and use these regions in the query phase.
@@ -295,7 +302,7 @@ Each subregion $R_i \in \calR$ is a hyper-ball defined using a center which we r
 \sAttract and a radius $r_i$.
 These regions, which may contain invalid states, are constructed in such a way that the following two properties hold
 \begin{enumerate}[label={\textbf{P\arabic*}}]
-  \item \label{property:1} For any valid goal state $s_{\text{goal}} \in R_i \cap G_\calS$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path to \sAttract.
+  \item \label{property:1} For any valid goal state $s_{\text{goal}} \in R_i \cap G_\calS$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path in $G_\calS$ to \sAttract.
   \item \label{property:2} The union of all the subregions completely cover the valid states in $G_\calS$. 
 		  Namely, $\forall s \in G_\calS~\text{s.t.}~s~\text{is valid}, \exists R \in \calR \ s.t. \ s \in R$.
 \end{enumerate}
@@ -326,7 +333,7 @@ For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_\calS$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from each \sAttract to~\sStart. 
 
 The algorithm covers~$G_\calS$ by iteratively finding a state $s$ not covered\footnote{Here, a state $s$ is said to be covered if there exists some region $R \in \calR$ such that $s \in R$.} by any region and computing a new region centered at $s$.
-To ensure that $G_\calS$ is complete covered (Property~\ref{property:1}) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
+To ensure that $G_\calS$ is complete covered (Property~\ref{property:2}) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
 We also construct regions of invalid states only $\hat{\calR}$ to efficiently store which invalid states have been considered.
 We start by initializing~$V$ with some random state in $G_\calS$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G_\calS$ is indeed covered.
 
@@ -435,7 +442,7 @@ The following definition formally captures the notion of a reachible state.
 
 \vspace{2mm}
 \begin{definition}
-	Given some attractor state \sAttract, a state $s$ is said to be reachable with respect to \sAttract if either
+	Given some attractor state \sAttract, we say that a state $s \in G_\calS$ is reachable with respect to \sAttract if either
 	(i)~$s = \sAttract$ or
 	(ii)~the greedy successor of $s$ is reachable with respect to \sAttract.
 \end{definition}
@@ -448,7 +455,11 @@ The search maintains a priority queue OPEN ordered according to $h(s,\sAttract)$
 %As the priority used for OPEN is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). 
 
 
-The algorithm terminates when the search pops a state which is valid but does not have a greedy successor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to the condition when the reachability search exists an obstacle (see Fig.~\ref{fig:alg2}). At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
+The algorithm terminates when the search pops a state which is valid but does not have a greedy successor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to either 
+(i)~the condition when the reachability search exists an obstacle (see Fig.~\ref{fig:alg2})
+or 
+(ii)~the condition when the reachability search re-enters the goal  region (see Fig.~\ref{fig:alg2b}). 
+At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
 
 
 \begin{algorithm}[t]
@@ -480,7 +491,7 @@ The algorithm terminates when the search pops a state which is valid but does no
 %        \State break
     \EndIf
     \For {each $p \in \text{Preds}(s)$}
-        \If {$p \notin$ CLOSED}
+        \If {$p \notin$ CLOSED and $p \notin G_\calS$}
             \State insert $p$ in OPEN with priority $h(p, \sAttract)$
         \EndIf
     \EndFor
@@ -501,11 +512,12 @@ Note that at no point  do we need to perform collision checking in the query pha
 \textbf{Remark}: Throughout this section we assumed that the underlying graph is symmetric (namely if there is an edge between $s$ and $s'$, then there is an edge between $s'$ and $s$). This was done for ease of exposition. In the general case, we would have to alter our reachability search (Alg.~\ref{alg:2}) to consider the predecessors of a given state and not its successors (see, line~\ref{alg:2:greedy}). 
 
 \textbf{Remark}: 
-\update{We can relax Assumption~\ref{assum:2} such that the heuristic function is not  weakly monotone with respect to $G_calS$ but with respect to all states.
+\update{We can relax Assumption~\ref{assum:2} such that the heuristic function is not  weakly monotone with respect to $G_\calS$ but with respect to all states.
 Namely, $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
     $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$.
   \end{center}
+In this case, when we perform our reachanility search (Alg.~\ref{alg:2})
 The implications are that }
 \update{Add to impl. details
 ``I prune the states that are outside the goal region and continue the subregion to grow''}
@@ -575,6 +587,9 @@ To reduce the number of precomputed regions we remove redundant ones after the A
 In order to do that, we iterate through all the subregions and remove the ones which are fully contained within any other subregion. 
 %Note that this is possible the way Alg.~\ref{alg:1} is designed. 
 This step reduces both the query complexity (see Sec.~\ref{sec:analysis}) as well as the memory consumption.
+
+\subsubsection{Pruning states outside of $G_\calS$}
+When we perform our reachability search (Alg.~\ref{alg:2}), we encounter states that leave the 
 
 \section {Analysis}
 \label{sec:analysis}

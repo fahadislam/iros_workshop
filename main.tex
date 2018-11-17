@@ -207,7 +207,8 @@ We then proceed (Sec.~\ref{subsec:alg}) to detail our algorithm and conclude wit
 Let $\calX$ be the configuration space of a robot operating in a static environment containing obstacles.
 We say that a configuration is valid (invalid) if the robot, placed in that configuration does not (does) collide with obstacles, respectively.
 We are given in advance a start configuration~$\sStart \in \calX$ and some goal region~$G \subset \calX$.
-In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
+We emphasize that the goal region may contain invalid configurations.
+In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ is a valid configuration and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
 Coming back to our motivating example of picking items from  shelves and placing them into a bin---the start configuration would be some predifined configuration above the bin where the robot can drop off the item and the goal region would be all possible placements of the robot's end effector that can grasp an object in one shelf.
 
@@ -219,13 +220,12 @@ We make the following assumptions:
   \item \label{assum:1} $G_\calS$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_\calS$.
 However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
   
-  \item \label{assum:2} The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
-
+  \item \label{assum:2} The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover the heuristic function should be $\textit{weakly-monotone}$ with respect to $G_\calS$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
     $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1) \cap G_\calS} h(s_1', s_2)$.
   \end{center}
-  Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors (also belonging to $G_\calS$) must have a heuristic value less than or equal to its heuristic value.
-	Note that this assumption does not imply  that~$G$ is entirely collision free.
+ Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors  that also belonging to $G_\calS$ must have a heuristic value less than or equal to its heuristic value.
+
 
   \item \label{assum:3} The planner has access to a tie breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is antisymmetric, transitive, and a connex relation.} over all states with the same heuristic value.
   % to a given state.
@@ -233,6 +233,9 @@ However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
 
 These assumptions allow us to establish strong theoretical properties regarding the efficiency of our planner. Namely, that
 within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_\calS$. 
+
+
+Assumption~\ref{assum:2} may be seen as restrictive, imposing that the goal region can not be of arbitrary structure. However, after we detail our algorithm, we sketch how we can slightly relax this assumption to be more realistic.
 %Proofs are omitted due to lack of space. 
 
 %
@@ -262,9 +265,7 @@ within a known bounded time, we can compute a collision-free path from $\sStart$
 
 
 
-  Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors (also belonging to $G_\calS$) must have a heuristic value less than or equal to its heuristic value.
-	Note that this assumption does not imply  that~$G$ is entirely collision free.
-
+ 
 \subsection{Key idea}
 \label{sec:key}
 Our algorithm relies heavily on the notion of a greedy search.  Thus, before we provide an overview of our algorithm, we formally define the terms greedy successor and greedy search.
@@ -498,6 +499,16 @@ The greedy path~$\pi_g$ is then appended to the corresponding precomputed path~$
 Note that at no point  do we need to perform collision checking in the query phase.
 
 \textbf{Remark}: Throughout this section we assumed that the underlying graph is symmetric (namely if there is an edge between $s$ and $s'$, then there is an edge between $s'$ and $s$). This was done for ease of exposition. In the general case, we would have to alter our reachability search (Alg.~\ref{alg:2}) to consider the predecessors of a given state and not its successors (see, line~\ref{alg:2:greedy}). 
+
+\textbf{Remark}: 
+\update{We can relax Assumption~\ref{assum:2} such that the heuristic function is not  weakly monotone with respect to $G_calS$ but with respect to all states.
+Namely, $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+  \begin{center}
+    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$.
+  \end{center}
+The implications are that }
+\update{Add to impl. details
+``I prune the states that are outside the goal region and continue the subregion to grow''}
 
 \begin{algorithm}[t]
 \footnotesize

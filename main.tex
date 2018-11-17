@@ -29,6 +29,7 @@
 \usepackage{algpseudocode}
 \usepackage{parskip}
 \usepackage{amsthm}
+\usepackage{subcaption}
 
 \algrenewcommand\algorithmicindent{1.0em}%
 
@@ -712,42 +713,65 @@ Having said that, this may come at the price of increasing the number of regions
 \section{Evaluation}
 \label{sec:eval}
 \begin{table*}[t]
+\centering
   % \begin{center}
-    \resizebox{\textwidth}{!}{%
-      \begin{tabular}{ l | c c c  c c c  c c c  c  c}
-         & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & \textsf{RRT} (T) & \textsf{RRT} (2T) & \textsf{RRT} (4T) & \textsf{E}-graph & \textsf{RRT}-Connect & \textbf{Our method} \\
-       \hline
-       Planning time [ms]& 15.2 (25.5) & 16.8 (57.2) & 16.3 (40.0) & 15.6 (24.9) & 16.8 (28.0) & 16.9 (30.1) & - (-) & 459.1 (3063.65) & \textbf{0.42 (0.7)}\\
-       Success rate [$\%$]& 98 & 100 & 100 & 90.5 & 88 & 89.5 & - & 98 & \textbf{100}\\
-       Memory usage [Mb] & 590 & 790 & 1290 & 118 & 183 & 284 & - & - & \textbf{7.8}\\
-      \end{tabular}
-  }
+  %   \resizebox{\textwidth}{!}{%
+  %     \begin{tabular}{ l | c c c  c c c  c c c  c  c}
+  %        & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & \textsf{RRT} (T) & \textsf{RRT} (2T) & \textsf{RRT} (4T) & \textsf{E}-graph & \textsf{RRT}-Connect & \textbf{Our method} \\
+  %      \hline
+  %      Planning time [ms]& 15.2 (25.5) & 16.8 (57.2) & 16.3 (40.0) & 15.6 (24.9) & 16.8 (28.0) & 16.9 (30.1) & - (-) & 459.1 (3063.65) & \textbf{0.42 (0.7)}\\
+  %      Success rate [$\%$]& 98 & 100 & 100 & 90.5 & 88 & 89.5 & - & 98 & \textbf{100}\\
+  %      Memory usage [Mb] & 590 & 790 & 1290 & 118 & 183 & 284 & - & - & \textbf{7.8}\\
+  %     \end{tabular}
+  % }
+    \resizebox{14cm}{!}{%
+    % \resizebox{1.4\textwidth}{!}{\begin{minipage}{\textwidth}
+        \begin{tabular}{ l | c c c c c}
+           & \textsf{PRM (4T)} & \textsf{RRT} (4T) & \textsf{E}-graph & \textsf{RRT}-Connect & \textbf{Our method} \\
+         \hline
+         Planning time [ms]& 21.7 (59.6) & 21.2 (35.5) & 497.8 (9678.5) & 1960 (9652) & \textbf{1.0 (1.6)}\\
+         Success rate [$\%$]& 86 & 69.75 & 153 & 167.5 & \textbf{100}\\
+         Memory usage [Mb] & 1828 & 225.75 & 2.0 & - & \textbf{7.8}\\
+        \end{tabular}
+    }
     \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with equal, double and quadruple the time that our method takes in precomputation (T = 1,569 seconds). Note that the worst-case time for our method shown in these results ($\sim$1 millisecond) is the empirical one and not the computed provable time bound which is 3 milliseconds for this environment.
-    Results of sampling-based planners are averaged over \update{XXX} trials}
+    Results of sampling-based planners are averaged over 200 trials}
     \label{tab:stats}
   % \end{center}
 % \vspace{-6mm}
 \end{table*}
 
-We evaluated our algorithm on the PR2 robot for a single-arm (7 DOF) motion planning problem. The task here is to pick up objects from the cubby shelf (see Fig.~\ref{fig:PR2}) and drop them off to some fixed location. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop of location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions of the end effector within the cubby shelf.
+We evaluated our algorithm on the PR2 robot for a single-arm (7 DOF) motion planning problem. The task here is to pick up objects from the cubby shelf (see Fig.~\ref{fig:PR2}) and drop them off in the grey basket. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop of location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions and orientations of the end effector within the cubby shelf.
 
-The search is done on an implicit graph $G_\calS$ constructed by using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end-effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. The heurstic function that we use (defined in Assumption~~\ref{assum:2}) is Euclidean distance in these 7 dimensions. The discretization we use for the graph $G_\calS$ is two~cm for the position axes, ten degrees for the Euler axes and five degrees for the redundant joint. 
-For this domain, 
-\update{we keep the orientation of the end effector fixed.
- (which significantly reduces the size of $G_\calS$) which only allow primitives in the position axes and for the redundant joint.}
+The search is done on an implicit graph $G_\calS$ constructed by using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. The heurstic function that we use (defined in Assumption~~\ref{assum:2}) is Euclidean distance in these 7 dimensions. The discretization we use for the graph $G_\calS$ is two~cm for the position axes, ten degrees for the Euler axes and five degrees for the redundant joint. 
+For this domain, we keep the $\textit{pitch}$ and $\textit{roll}$ of the end effector fixed and allow motion primitives along the remaining five dimensions i.e. $\textit{x, y, z, yaw}$ and the reduntant joint angle. We also limit the $\textit{yaw}$ to be between negative thirty and thirty degrees. Note that the specification of the $G_\calS$ is purely task specific and we exploit the task constraints to limit the size of $G_\calS$ which makes our preprocessing step tractable.
 
-We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 randomly sampled goal states from $G$ (we sample 100 goals from the left and 100 goals from the right side of the shelf). Among the multi-query planners, we implemented \textsf{PRM}, a multi-query version of \textsf{RRT} and the E-graph planner. 
-
+We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 uniformly sampled goal states from $G$. Among the multi-query planners, we implemented \textsf{PRM}, a multi-query version of \textsf{RRT} which we name as MQ-RRT and the E-graph planner. As $\sStart$ in our setting is fixed we can precompute a dense RRT tree offline (similar to PRM) and query it by trying to connect $\sGoal$ to the nearest nodes of the precomputed RRT tree. We use the same connection strategy for MQ-RRT as the one that the probablisitically complete version of PRM uses i.e. connecting to $k$ nearest neigbors where $k$ is not a constant but depends on the cardinality of the roadmap i.e. $k = e(1+1/d)log(n)$ where n is the number of nodes in the tree/roadmap and $d$ is the dimensionality of the configuration space~\cite{karaman2011sampling}. 
 In case of \textsf{PRM}, for fairness we precomputed the paths from all the nodes in~$G$ to~$s_{\text{start}}$ (this is analogous to our library~$\calL$). 
-The query stage only required \textsf{PRM}'s connect operation. 
-For \textsf{RRT}~\cite{LK01}, we precomputed an \textsf{RRT}-tree rooted at the start state and grown towards~$G$. Similar to \textsf{PRM}, the query step attempted to connect the query to $k$ nearest neighbors in the \textsf{RRT} tree. For both of these planners we also added a goal-region bias by sampling from~$G$, five percent of the time\footnote{We used OMPL~\cite{SMK12} for comparisons with the sampling-based planners and modified the implementations as per needed.}. 
+The query stage thus only required the connect operation (i.e. attempting to connect to $k$ nearest neighbors of $\sGoal$). For both of these planners we also added a goal-region bias by directly sampling from~$G$, five percent of the time\footnote{We used OMPL~\cite{SMK12} for comparisons with the sampling-based planners and modified the implementations as per needed.}. 
 
 For single-query planning, we only report the results for \textsf{RRT}-Connect as it has the fastest run times from our experience. For \textsf{PRM} and \textsf{RRT}, if the connect operation fails for a query, we considered that case as a failure. For \textsf{RRT}-Connect, we set a timeout of 10 seconds.
 
-For our method, preprocessing (Alg.~\ref{alg:1}) took 1,569 seconds and returned 504 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT}-Connect. For the first run of Alg.~\ref{alg:1}, we set the timeout to be 10 seconds and for the second run (after reloading $V$ with the bad attractors), we set the timeout to be 60 seconds. By doing so the algorithm finishes successfully with having no remaining bad attractors.
+For our method, preprocessing (Alg.~\ref{alg:1}) took 1,445 seconds and returned 1,390 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT}-Connect. For the first run of Alg.~\ref{alg:1}, we set the timeout to be 10 seconds and for the second run (after reloading $V$ with the bad attractors), we set the timeout to be 60 seconds. By doing so the algorithm finishes successfully with having no remaining bad attractors.
 
 From the results we observe that our method shows a speedup of over tenfold in query time as compared to other multi-query planners primarily because it doesn't require collision checking. RRT-Connect being a single-query planner is orders of magnitude slower. {\color{blue} continued.. (will finish after I get complete results)}
 
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{success.png}
+        \caption{}
+        \label{fig:success}
+    \end{subfigure}
+    ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+      %(or a blank line to force the subfigure onto a new line)
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{memory.png}
+        \caption{}
+        \label{fig:memory}
+    \end{subfigure}
+    \caption{The plots shows the preprocessing time versus (a) the success rates and (b) for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The red cross shows our method for reference.}
+\end{figure}
 
 
 \section{Conclusion and future work}

@@ -220,18 +220,21 @@ We make the following assumptions:
   \item \label{assum:1} $G_\calS$ is a relatively small subset of $S$. Namely, it is feasible to exhaustively iterate over all states in $G_\calS$.
 However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
   
-  \item \label{assum:2} The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover the heuristic function should be $\textit{weakly-monotone}$ with respect to $G_\calS$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
-%  \begin{center}
-%    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1) \cap G_\calS} h(s_1', s_2)$.
-%  \end{center}
+  \item \label{assum:2} The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover, 
+ \begin{itemize}
+ 	\item The heuristic function should be \textit{weakly-monotone} with respect to $G_\calS$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
-    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$
-    and
-    $\arg \min \limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \in G_\calS$.
+    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$.
   \end{center}
-% Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors  that also belonging to $G_\calS$ must have a heuristic value less than or equal to its heuristic value.
- Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors  that also belonging to $G_\calS$ must have a heuristic value less than or equal to its heuristic value.
- Moreover, the successor with minimal heuristic valies lies in the goal region.
+
+	\item The heuristic $h$ function should induce that the goal region is \emph{convex} with respect to $h$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+  \begin{center}
+     $\arg \min \limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \in G_\calS$.
+  \end{center}
+
+ \end{itemize}
+ Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors  must have a heuristic value less than or equal to its heuristic value.
+ Moreover, the successor with minimal heuristic value lies in the goal region.
 
 
   \item \label{assum:3} The planner has access to a tie breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is antisymmetric, transitive, and a connex relation.} over all states with the same heuristic value.
@@ -242,34 +245,7 @@ These assumptions allow us to establish strong theoretical properties regarding 
 within a known bounded time, we can compute a collision-free path from $\sStart$ to any state in $G_\calS$. 
 
 
-Assumption~\ref{assum:2} may seem too restrictive, imposing that the goal region can not be of arbitrary structure. However, after we detail our algorithm (Sec.~\ref{subsec:alg}) and analyze its theoretical properties (Sec.~\ref{sec:analysis}), we sketch how we can slightly relax this assumption to be more realistic.
-%Proofs are omitted due to lack of space. 
-
-%
-%\newpage
-%a
-%\newpage
-%\update{The way Alg.~\ref{alg:2} is written (this is where we use the following assumption), we expand a subregion out side of the goal region. This can be good or bad, it can waist a lot of time as we are ``learning'' parts of the C-space that we don't care about but could allow us to have larger subregions.}
-%%
-%
-%Assumption \textbf{A2}  The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$.
-%
-%\textbf{Option 1:}
-%Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
-%  \begin{center}
-%    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1) \cap G_\calS} h(s_1', s_2)$.
-%  \end{center}
-%\update{As Max pointed out, this means that we have some requirement over the goal region which is not ideal.
-%However, this simplifies Alg.~\ref{alg:2} and is actually what we implemented.}
-%
-%\textbf{Option 2:}
-%Moreover the heuristic function should be $\textit{weakly-monotonic}$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
-%  \begin{center}
-%    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$.
-%  \end{center}
-%\update{Here, the requirements on the heuristic function is less strict. We have two options for this case:
-%(1) change the notion of a greedy successor (def~\ref{def:greedy-suc} to ensure that the greedy successor is within)}
-
+Assumption~\ref{assum:2} may seem too restrictive (especially convexity), imposing that the goal region can not be of arbitrary structure. However, after we detail our algorithm (Sec.~\ref{subsec:alg}) and analyze its theoretical properties (Sec.~\ref{sec:analysis}), we sketch how we can slightly relax this assumption to be more realistic.
 
 
  
@@ -295,6 +271,9 @@ In the rest of the text, when we use the term greedy successor, we assume that i
 	Given a heuristic function $h(\cdot)$,
 	an algorithm is said to be a \emph{greedy search}	 if for every state it returns its greedy succesor.
 \end{definition}
+
+\textbf{Remark:} Now that we have the notion of greedy search, we can better explain our definition of convexity with respect to~$h$ (Assumption~\ref{assum:2});
+this assumption ensures that a greedy search between any pair of states lies within the goal region, analogously to the standard notion of a convex   region where for every pair of points within the region, every point on the straight line segment that joins the pair of points is also within the region.
 
 Our key insight is to precompute in an offline phase regions where a greedy search to a certain state is guaranteed to be collision free and use these regions in the query phase.
 Specifically, in the preprocessing phase, $G_\calS$ is decomposed into a finite  set of (possibly overlapping) subregions $\calR$.
@@ -669,16 +648,13 @@ A similar argument holds if $s$ is not valid.
 \end{proof}
 
 
-%\begin{lemma}
-%\label{lemma:reachable}
-%Let $R_i \in \calR$ be a region computed by Alg.~\ref{alg:2}.
-%%
-%Every state $s \in R_i$ is reachable with respect to \sAttract.
-%\end{lemma}
-%
-%\begin{proof}
-%We will again prove this lemma by contradiction. Assume that there exists a state $s$ with $h(s,\sAttract) < r_i$ and was still not marked as $reachable$ in the reachability search. In that case along the path from $s$ to $\sAttract$, traced by the greedy search there must exist at least one state $s'$ s.t. $h(s',\sAttract) > r_i$. The reason is that as the reachability search expands states in the order of minimum heuristic value, $s'$ will never get expanded and thus will block the search from covering $s$. But since we assume that the heuristic function is weekly monotonic, this hypothesis cannot be true and hence there cannot exist such a state $s$.
-%\end{proof}
+\begin{lemma}
+	After preprocessing the goal region~$G_\calS$ (Alg.~\ref{alg:1} and~\ref{alg:2}), given a state $s$ and an attractor state \sAttract,  if $h(s, \sAttract) < r_i$ then $s \in R_i$.
+\end{lemma}
+
+\begin{proof}
+	\update{COMPLETE PROOF}
+\end{proof}
 
 From the above we can immediately deduce the following corollary:
 
@@ -796,7 +772,7 @@ From the results we observe that our method shows a speedup of over tenfold in q
         \caption{}
         \label{fig:memory}
     \end{subfigure}
-    \caption{The plots shows the preprocessing time versus (a) the success rates and (b) for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The red cross shows our method for reference.}
+    \caption{The plots shows the preprocessing time versus \subref{fig:success} the success rates and \subref{fig:memory} for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The red cross shows our method for reference.}
 \end{figure}
 
 

@@ -469,8 +469,8 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
         \State \Return (OPEN, $r_i$)
 %        \State break
     \EndIf
-    \For {each $p \in \text{Preds}(s)$}
-        \If {$p \notin$ CLOSED and $p \notin G_\calS$}
+    \For {each $p \in \text{Preds}(s) \cap G_\calS$} \label{alg:2:prun}
+        \If {$p \notin$ CLOSED}
             \State insert $p$ in OPEN with priority $h(p, \sAttract)$
         \EndIf
     \EndFor
@@ -490,16 +490,6 @@ Note that at no point  do we need to perform collision checking in the query pha
 
 \textbf{Remark}: Throughout this section we assumed that the underlying graph is symmetric (namely if there is an edge between $s$ and $s'$, then there is an edge between $s'$ and $s$). This was done for ease of exposition. In the general case, we would have to alter our reachability search (Alg.~\ref{alg:2}) to consider the predecessors of a given state and not its successors (see, line~\ref{alg:2:greedy}). 
 
-\textbf{Remark}: 
-\update{We can relax Assumption~\ref{assum:2} such that the heuristic function is not  weakly monotone with respect to $G_\calS$ but with respect to all states.
-Namely, $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
-  \begin{center}
-    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$.
-  \end{center}
-In this case, when we perform our reachanility search (Alg.~\ref{alg:2})
-The implications are that }
-\update{Add to impl. details
-``I prune the states that are outside the goal region and continue the subregion to grow''}
 
 \begin{algorithm}[t]
 \footnotesize
@@ -567,9 +557,6 @@ In order to do that, we iterate through all the subregions and remove the ones w
 %Note that this is possible the way Alg.~\ref{alg:1} is designed. 
 This step reduces both the query complexity (see Sec.~\ref{sec:analysis}) as well as the memory consumption.
 
-\subsubsection{Pruning states outside of $G_\calS$}
-When we perform our reachability search (Alg.~\ref{alg:2}), we encounter states that leave the 
-
 \section {Analysis}
 \label{sec:analysis}
 In this section we formally prove that 
@@ -613,9 +600,11 @@ As our heuristic function is weakly monotonic (Assumption~\ref{assum:2}), the va
 Thus, for every state $s \in S_{\text{reachable}}$, we have that $h(s, \sAttract) < r_i$.
 
 For the opposite direction, assume that there exists a state $s \notin S_{\text{reachable}}$ such that $h(s, \sAttract) \leq r_i$.
-As $s\notin S_{\text{reachable}}$, Alg.~\ref{alg:2} terminated due to a node $s'$ that was popped from the open list with 
+This may be because  Alg.~\ref{alg:2} terminated due to a node $s'$ that was popped from the open list with 
 $h(s', \sAttract) \geq r_i$.
-Again, using the fact that our heuristic function is weakly monotonic (Assumption~~\ref{assum:2}) we get a contradiction to the fact that $h(s, \sAttract) \leq r_i$
+However, using the fact that our heuristic function is weakly monotonic (Assumption~~\ref{assum:2}) we get a contradiction to the fact that $h(s, \sAttract) \leq r_i$.
+Alternatively, this may be bacuse we prun away states that are in $G_\calS$. 
+However, using the fact that our goal region is conves with respect to $h$ (Assumption~~\ref{assum:2}), this cannot hold.
 \end{proof}
 
 \begin{lemma}
@@ -647,15 +636,6 @@ If $s$ is valid, then it would have been in the valid frontier states $V$ and ei
 A similar argument holds if $s$ is not valid.
 \end{proof}
 
-
-\begin{lemma}
-	After preprocessing the goal region~$G_\calS$ (Alg.~\ref{alg:1} and~\ref{alg:2}), given a state $s$ and an attractor state \sAttract,  if $h(s, \sAttract) < r_i$ then $s \in R_i$.
-\end{lemma}
-
-\begin{proof}
-	\update{COMPLETE PROOF}
-\end{proof}
-
 From the above we can immediately deduce the following corollary:
 
 \vspace{2mm}
@@ -663,6 +643,16 @@ From the above we can immediately deduce the following corollary:
 \begin{cor}
 	After preprocessing the goal region~$G_\calS$ (Alg.~\ref{alg:1} and~\ref{alg:2}), in the query phase we can compute a valid path for any valid state $s \in G_\calS$ using Alg.~\ref{alg:3}.
 \end{cor}
+
+
+\textbf{Remark}
+We can relax Assumption~\ref{assum:2} in two ways.
+The first, is by explicitly tracking states not in the goal region instead of pruning them away (Alg.~\ref{alg:2} Line~\ref{alg:2:prun}) and terminating not only when we found a valid state whose successor is invalid (Line~\ref{alg:2:crit}) but also when we found a state in $G_\calS$ whose successor is not in $G_\calS$.
+Unfortunately, this may require the algorithm to store many states not in $G_\calS$  which may be impractical (recall that Assumption~\ref{assump:1} only states that we can exhaustively cover the states in the goal region).
+An alternative, more practical way, to relax Assumption~\ref{assum:2}  is by terminating the search when we  encounter a state not in the goal region.
+This may cause the algorithm to generate much more regions (with smaller radii) which may increase the memory footprint and the preprocessing times.
+
+
 %
 %
 %
@@ -748,7 +738,7 @@ We evaluated our algorithm on the PR2 robot for a single-arm (7 DOF) motion plan
 The search is done on an implicit graph $G_\calS$ constructed by using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. The heurstic function that we use (defined in Assumption~~\ref{assum:2}) is Euclidean distance in these 7 dimensions. The discretization we use for the graph $G_\calS$ is two~cm for the position axes, ten degrees for the Euler axes and five degrees for the redundant joint. 
 For this domain, we keep the $\textit{pitch}$ and $\textit{roll}$ of the end effector fixed and allow motion primitives along the remaining five dimensions i.e. $\textit{x, y, z, yaw}$ and the reduntant joint angle. We also limit the $\textit{yaw}$ to be between negative thirty and thirty degrees. Note that the specification of the $G_\calS$ is purely task specific and we exploit the task constraints to limit the size of $G_\calS$ which makes our preprocessing step tractable.
 
-We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 uniformly sampled goal states from $G$. Among the multi-query planners, we implemented \textsf{PRM}, a multi-query version of \textsf{RRT} which we name as MQ-RRT and the E-graph planner. As $\sStart$ in our setting is fixed we can precompute a dense RRT tree offline (similar to PRM) and query it by trying to connect $\sGoal$ to the nearest nodes of the precomputed RRT tree. We use the same connection strategy for MQ-RRT as the one that the probablisitically complete version of PRM uses i.e. connecting to $k$ nearest neigbors where $k$ is not a constant but depends on the cardinality of the roadmap i.e. $k = e(1+1/d)log(n)$ where $n$ is the number of nodes in the tree/roadmap and $d$ is the dimensionality of the configuration space~\cite{karaman2011sampling}. 
+We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 uniformly sampled goal states from $G$. Among the multi-query planners, we implemented \textsf{PRM}, a multi-query version of \textsf{RRT} which we name as MQ-RRT and the E-graph planner. As $\sStart$ in our setting is fixed we can precompute a dense RRT tree offline (similar to PRM) and query it by trying to connect $\sGoal$ to the nearest nodes of the precomputed RRT tree. We use the same connection strategy for MQ-RRT as the one that the probablisitically complete version of PRM uses i.e. connecting to $k$ nearest neigbors where $k$ is not a constant but depends on the cardinality of the roadmap i.e. $k = e(1+1/d)log(n)$ where $n$ is the number of nodes in the tree/roadmap and $d$ is the dimensionality of the configuration space~\cite{karaman2011sampling,SSH16}. 
 In case of \textsf{PRM}, for fairness we precomputed the paths from all the nodes in~$G$ to~$s_{\text{start}}$ (this is analogous to our library~$\calL$). 
 The query stage thus only required the connect operation (i.e. attempting to connect to $k$ nearest neighbors of $\sGoal$). For both of these planners we also added a goal-region bias by directly sampling from~$G$, five percent of the time\footnote{We used OMPL~\cite{SMK12} for comparisons with the sampling-based planners and modified the implementations as per needed.}. 
 
@@ -759,7 +749,7 @@ For our method, preprocessing (Alg.~\ref{alg:1}) took 1,445 seconds and returned
 Table~\ref{tab:stats} shows the numerical results of our experiments. Our method being provably guaranteed to find a plan in bounded time, shows a success rate of 100 percent. For the two preprocessing-based planners PRM and MQ-RRT, we report the results for a preprocessing time of 4T (T being the time consumed by our method in preprocessing). The E-graph planner is bootstrapped with a hundred paths precomputed for uniformly sampled goals in $G_S$. For each of these three multi-query planners while running the experiments, the newly created edges were appended to the auxilary data (tree, roadmap or E-graph) for the subsequent queries.
 
 Among other planners, PRM shows the highest success rate but at the cost of a large memory footprint. The E-graph planner has a small memory footprint but it shows significantly longer planning times. RRT-Connect being a single-query planner happens to be the slowest. Our method shows a speedup of over tenfold in query time as compared to PRM and MQ-RRT about three orders of magnitude speedup over the E-graph planner and RRT-Connect. The plots in Fig.~\ref{fig:plots} show how the success rate and the memory footprints of PRM and MQ-RRT vary as a function of the preprocessing time. For our domain the PRM seems to saturate in terms of the success rate after T time whereas MQ-RRT continues to improve provided more preprocessing time whereas in terms of memory usage, PRM's memory footprint grows more rapidly than MQ-RRT.
-\begin{figure}
+\begin{figure*}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{success.png}
@@ -775,7 +765,7 @@ Among other planners, PRM shows the highest success rate but at the cost of a la
     \end{subfigure}
     \caption{The plots shows the preprocessing time versus (\subref{fig:success}) the success rates and (\subref{fig:memory}) for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The red cross shows our method for reference.}
     \label{fig:plots}
-\end{figure}
+\end{figure*}
 
 
 \section{Conclusion and future work}

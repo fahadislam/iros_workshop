@@ -71,7 +71,7 @@ filecolor=blue,
 menucolor=blue,
 urlcolor=blue
 }
-\hypersetup{draft}
+%\hypersetup{draft}
  \begin{document}
 % The file aaai.sty is the style file for AAAI Press 
 % proceedings, working notes, and technical reports.
@@ -96,33 +96,25 @@ Preprocessing-based approaches prove to be very beneficial in these settings---t
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is extremely challenging.
 % Moreover, as far as we are aware of, none of the general-purpose algorithms come with \emph{provable} guarantees on the real-time performance.
-While there are planners that guarantee real-time performance by limiting the planning horizon, we are not aware of general purpose planners capable of doing it for infinite horizon (i.e planning to the goal).
+While there are planners that guarantee real-time performance by limiting the planning horizon, we are not aware of general purpose planners capable of doing it for infinite horizon (i.e., planning to the goal).
 %
 To this end, we propose a preprocessing-based method that provides provable bounds on the query time while incurring only a small amount of memory overhead in the query phase.
-We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm, while provably guaranteeing a maximum query time of less than 3 milliseconds.
+We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm, while \emph{provably} guaranteeing a maximum query time of less than 3 milliseconds.
 \end{abstract}
 
 \section{Introduction}
 %1. What is the problem?
 We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times.
 %2. Why is it relevant?
-As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is typically currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
+As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
 While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
 Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the shelf or in different orientations.
 Fast planning times immediately correspond to faster packing capabilities. 
 Moreover, if the planner cannot \emph{guarantee} to pick items from the shelf in a timely manner, the system is required to account for possible backlogs by e.g., adding more floor space for shelves that are queued and not being unpacked---a costly backup in terms of both time and space.
 
-%\update{
-%As a running example, consider the problem of a robot picking up objects from a high-speed conveyor belt and placing them into bins (see Fig.~\ref{fig:PR2}).
-%While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
-%Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the conveyor belt or in different orientations.
-%Fast planning times immediately correspond to faster unloading capabilities. 
-%Moreover, if the planner cannot \emph{guarantee} to pick items from the conveyor in a timely manner, the system is required to account for missed items by e.g., additional conveyor belts that will redirect items back to the robot---a costly backup in terms of both time and space.
-%}
-
 %3. Why is it hard?
 Clearly, every time a task is presented to the robot, it can compute a desired path.
-However, this may incur large online planning times that may be unacceptable in many settings.
+However, this may at times incur large online planning times that may be unacceptable in many settings.
 %
 Alternatively, we could attempt to precompute for each start and goal pair a robot path.
 However, as the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable in high-dimensional configuration spaces\footnote{
@@ -162,7 +154,7 @@ We describe our approach in Sec.~\ref{sec:alg} and analyze it in Sec.~\ref{sec:a
 
 %7. How do we compare against the state of the art?
 We evaluate our approach in Sec.~\ref{sec:eval} in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2}).
-We demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a little memory footprint if 0.2 Mbs and while guaranteeing a maximal query time of less than 3 milliseconds.
+We demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a memory footprint o less than 8 Mb while guaranteeing a maximal query time of less than 3 milliseconds.
 
 %8. What are our contributions?
 %9. What are our limitations?
@@ -170,7 +162,7 @@ We demonstrate a speedup of over tenfold in query time when compared to the \tex
 \section{Related work}
 \label{sec:rel}
 A straightforward approach to efficiently preprocess a known environment is using the \textsf{PRM} algorithm~\cite{kavraki1996probabilistic} which generates a \emph{roadmap}\footnote{A roadmap is a graph embedded in the configuration space where vertices correspond to configurations and edges correspond to paths connecting close-by configurations.}.
-Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the source and goal to the roadmap. 
+Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the start and goal to the roadmap. 
 Query times can be significantly sped up by further preprocessing the roadmaps using landmarks~\cite{paden2017landmark}.
 Unfortunately, there is no guarantee that a query can be connected to the roadmap as \textsf{PRM} only provides \emph{asymptotic} guarantees~\cite{KKL98}.
 Furthermore, this connecting phase requires running a collision-detection algorithm which is typically considered the computational bottleneck in many motion-planning algorithms~\cite{L06}.
@@ -186,13 +178,13 @@ or limiting the approach to standard manipulators~\cite{YMILV18}.
 An alternative approach to address our problem is to precompute a set of complete paths into a library and given a query, attempt to match complete paths from the library to the new query~\cite{berenson2012robot,jetchev2013fast}.
 Using paths from previous search episodes (also known as using experience) has also been an active line of work~\cite{PCCL12,PDCL13,BAG12,CSMOC15}.
 Some of these methods have been integrated with sparse motion-planning roadmaps (see e.g.,~\cite{SSAH14,DB14}) to reduce the memory footprint of the algorithm.
-Unfortunately, non of the mentioned algorithms provide any of the guarantees required by our applications.
+Unfortunately, none of the mentioned algorithms provide bounded planning-time guarantees that are required by our applications.
 
 Our work bares resemblance to previous work on 
 subgoal graphs~\cite{UK17,UK18} and to real-time planning~\cite{KL06,KS09,K90}.
-However, in the former, the entire configuration space is preprocessed in order to efficiently answer queries between \emph{any} pair of states which deems it applicable only to low-dimensional spaces.
+However, in the former, the entire configuration space is preprocessed in order to efficiently answer queries between \emph{any} pair of states which deems it applicable only to low-dimensional spaces (e.g., 2D or 3D).
 %{\color{blue} Also their $connect$ step is expensive as it requires a Dijkstra's like search to connect to the subgoal graph.} 
-Similarly, in the latter, to provide guarantees on planning time the search only looks at a finite horizon and interleaves planning and execution.
+Similarly, in the latter, to provide guarantees on planning time the search only looks at a finite horizon, generating a prtial plan,  and interleaves planning and execution.
 
 Finally, our notion of attractor states is similar to control-based methods that  ensure safe operation over local regions of the free configuration space~\cite{CRC03,CCR06}.
 These regions are then used within a high-level motion planner to compute collision-free paths.
@@ -200,7 +192,7 @@ These regions are then used within a high-level motion planner to compute collis
 \section{Algorithm Framework}
 \label{sec:alg}
 In this section we describe our algorithmic framework. We start (Sec.~\ref{sec:pdef}) by formally defining our problem and continue (Sec.~\ref{sec:key}) by describing the key idea that enables our approach.
-We then proceed (Sec.~\ref{subsec:alg}) to detail our algorithm and conclude with implementation details (Sec.~\ref{subsec:impl})
+We then proceed (Sec.~\ref{subsec:alg}) to detail our algorithm and conclude with implementation details (Sec.~\ref{subsec:impl}).
 
 \subsection{Problem formulation and assumptions}
 \label{sec:pdef}
@@ -212,8 +204,8 @@ In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ wh
 
 Coming back to our motivating example of picking items from  shelves and placing them into a bin---the start configuration would be some predifined configuration above the bin where the robot can drop off the item and the goal region would be all possible placements of the robot's end effector that can grasp an object in one shelf.
 
-We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$
-and set $G_\calS := \calS \cap G$ to be the states that reside in the goal region.
+We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$ and assume for simplicity  that the induced graph is undirected (namely, $\forall s,s'~s.t.~ s' \in \text{Succ} (s)$ we have that $s \in \text{Succ} (s')$).
+Define $G_\calS := \calS \cap G$ to be the states that reside in the goal region.
 We make the following assumptions:
 
 \begin{enumerate}[label={\textbf{A\arabic*}}]
@@ -237,7 +229,7 @@ However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
  Moreover, the successor with minimal heuristic value lies in the goal region.
 
 
-  \item \label{assum:3} The planner has access to a tie breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is antisymmetric, transitive, and a connex relation.} over all states with the same heuristic value.
+  \item \label{assum:3} The planner has access to a tie-breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is anti-symmetric, transitive, and a convex relation.} over all states with the same heuristic value.
   % to a given state.
   \end{enumerate}
 
@@ -251,7 +243,7 @@ Assumption~\ref{assum:2} may seem too restrictive (especially convexity), imposi
  
 \subsection{Key idea}
 \label{sec:key}
-Our algorithm relies heavily on the notion of a greedy search.  Thus, we describe of our algorithm, we formally define the terms greedy successor and greedy search.
+Our algorithm relies heavily on the notion of a greedy search.  Thus, before we describe of our algorithm, we formally define the terms greedy successor and greedy search.
 
 \vspace{2mm}
 \begin{definition}
@@ -263,19 +255,19 @@ Note that
 if $h$ is weakly monotone with respecte to $G_\calS$
 (Assumption~\ref{assum:2}) 
 and we have some tie-breaking rule
-(Assumption~\ref{assum:3}), then there every state has a greedy successor in the goal region and it is unique.  
+(Assumption~\ref{assum:3}), then every state has a greedy successor in the goal region and it is unique.  
 In the rest of the text, when we use the term greedy successor, we assume that it is unique and in $G_\calS$.
 
 \vspace{2mm}
 \begin{definition}
 	Given a heuristic function $h(\cdot)$,
-	an algorithm is said to be a \emph{greedy search}	 if for every state it returns its greedy succesor.
+	an algorithm is said to be a \emph{greedy search}	 with respect to $h$ if for every state it returns its greedy succesor according to $h$.
 \end{definition}
 
 \textbf{Remark:} Now that we have the notion of greedy search, we can better explain our definition of convexity with respect to~$h$ (Assumption~\ref{assum:2});
 this assumption ensures that a greedy search between any pair of states lies within the goal region, analogously to the standard notion of a convex   region where for every pair of points within the region, every point on the straight line segment that joins the pair of points is also within the region.
 
-Our key insight is to precompute in an offline phase regions where a greedy search to a certain state is guaranteed to be collision free and use these regions in the query phase.
+Our key insight is to precompute in an offline phase regions where a greedy search to a certain (``attractor'') state is guaranteed to be collision free and use these regions in the query phase.
 Specifically, in the preprocessing phase, $G_\calS$ is decomposed into a finite  set of (possibly overlapping) subregions $\calR$.
 Each subregion $R_i \in \calR$ is a hyper-ball defined using a center which we refer to as the ``attractor state''~
 \sAttract and a radius $r_i$.
@@ -293,14 +285,16 @@ In the query phase, given a query~\sGoal, we
 (iii)~append this path with the precomputed path in $\calL$ to $\sStart$ to obtain the complete plan.
 For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 
+
 \begin{figure}
 \centering
 \includegraphics[width=0.45\textwidth]{Approach.pdf}
   	% \vspace{-2mm}
   \caption{
   Visualization of approach. Subregions are depicted in green, 
-  goal region~$G$ is depicted in tilled grey (grey) containing obstacles (red).
-  Precomputed paths from attractor states to $s_{\rm{start}}$ are depicted in blue and a greedy path $\pi_g$ to \sAttract is depicted in purple. 
+  goal region~$G$ is depicted in tilled gray  containing obstacles (red).
+  Precomputed paths from attractor states to $s_{\rm{start}}$ are depicted in blue.
+ Given a query $(s_{\rm{start}}, s_{\rm{goal}})$, the returned path is given by $\pi_i$ and a greedy path $\pi_g$ to \sAttract which is depicted in purple. 
 }
    	\label{fig:approach}
 % \vspace{-6mm}
@@ -309,14 +303,14 @@ For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 \subsection {Algorithm}
 \label{subsec:alg}
 \subsubsection{Preprocessing Phase}
-The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_\calS$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from each \sAttract to~\sStart. 
+The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_\calS$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from~\sStart to each~\sAttract. 
 
 The algorithm covers~$G_\calS$ by iteratively finding a state $s$ not covered\footnote{Here, a state $s$ is said to be covered if there exists some region $R \in \calR$ such that $s \in R$.} by any region and computing a new region centered at $s$.
-To ensure that $G_\calS$ is complete covered (Property~\ref{property:2}) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
-We also construct regions of invalid states only $\hat{\calR}$ to efficiently store which invalid states have been considered.
+To ensure that $G_\calS$ is completely covered (Property~\ref{property:2}) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
+We also construct regions of only invalid states~$\hat{\calR}$ to efficiently store which invalid states have been considered.
 We start by initializing~$V$ with some random state in $G_\calS$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G_\calS$ is indeed covered.
 
-At every iteration, we pop a state from $V$ (line~\ref{alg:1:pop}), and if there is no region covering it, we add it as a new attractor state and compute a path $\pi_i$ to $\sStart$ (line~\ref{alg:1:path}).
+At every iteration, we pop a state from $V$ (line~\ref{alg:1:pop}), and if there is no region covering it, we add it as a new attractor state and compute a path $\pi_i$ from $\sStart$ (line~\ref{alg:1:path}).
 We then compute the corresponding region (line~\ref{alg:1:cr} and Alg.~\ref{alg:2}).
 
 As we will see shortly, computing a region corresponds to a Dijkstra-like search centered at the attractor state.
@@ -324,7 +318,7 @@ The search terminates with the region's radius $r_i$ and a list of frontier stat
 The valid and invalid states are then added to $V$ and $I$, respectively (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}).
 
 
-Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G_\calS$ is covered under at least one subregion.
+Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G_\calS$ is covered by at least one subregion.
 
 \begin{algorithm}[t]
 \footnotesize
@@ -363,7 +357,7 @@ $\calR, \calL$
             \Comment{$s$ is not covered}
 				\State $\sAttract \leftarrow s$               
 				\label{alg:1:attract} 
-                \State $\pi_i$ = \textsc{PlanPath}($\sAttract , \sStart$);	\label{alg:1:pp}
+                \State $\pi_i$ = \textsc{PlanPath}($\sStart, \sAttract$);	\label{alg:1:pp}
                 \hspace{2mm }
                 $\calL \leftarrow \calL \cup \{ \pi_i \}$  \label{alg:1:path}
                 \State $(\text{OPEN}, r_i) \leftarrow$ \textsc{ComputeReachability}($\sAttract$) \label{alg:1:cr}
@@ -417,13 +411,13 @@ $\calR, \calL$
 The core of our planner lies in the way we compute the subregions (Alg.~\ref{alg:2} and Fig.~\ref{fig:alg2}) which we call a ``Reachability Search''. The algorithm maintains a set of \emph{reachable} states $S_{\text{reachable}}$ for which Property~\ref{property:1} holds.
 As we will see, this will ensure that in the query phase, we can run a greedy search from any reachable state $s \in S_{\text{reachable}}$ and it will terminate in the attractor state. 
 %
-The following definition formally captures the notion of a reachible state.
+The following recursive definition formally captures the notion of a reachible state.
 
 \vspace{2mm}
 \begin{definition}
-	Given some attractor state \sAttract, we say that a state $s \in G_\calS$ is reachable with respect to \sAttract if either
+	Given some attractor state \sAttract, we say that a state $s \in G_\calS$ is reachable under some function $h(\cdot)$ with respect to \sAttract if either
 	(i)~$s = \sAttract$ or
-	(ii)~the greedy successor of $s$ is reachable with respect to \sAttract.
+	(ii)~the greedy successor of $s$ with respect to $h$ is reachable with respect to \sAttract.
 \end{definition}
 
 %Namely, the greedy successor $s'$ of every reachable state $s \in S_{\text{reachable}}$ is also a reachable state, except for the attractor state \sAttract. 
@@ -434,10 +428,7 @@ The search maintains a priority queue OPEN ordered according to $h(s,\sAttract)$
 %As the priority used for OPEN is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). 
 
 
-The algorithm terminates when the search pops a state which is valid but does not have a greedy successor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to either 
-(i)~the condition when the reachability search exists an obstacle (see Fig.~\ref{fig:alg2})
-or 
-(ii)~the condition when the reachability search re-enters the goal  region (see Fig.~\ref{fig:alg2}).
+The algorithm terminates when the search pops a state which is valid but does not have a greedy successor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to  the condition when the reachability search exits an obstacle (see Fig.~\ref{fig:alg2}).
 At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
 
 
@@ -454,7 +445,7 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
 \State $r_i \leftarrow 0$
 
 %\While {$r_i \leq r_{\text{max}}$}
-\Loop{}
+\While{OPEN$\neq \emptyset$}
     \State $s \leftarrow$ OPEN.pop()
     \State insert $s$ in CLOSED
     \State $s'_g \leftarrow \arg \min_{s' \in \text{Succ}(s)} h(s', \sAttract)$ 
@@ -474,7 +465,8 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
             \State insert $p$ in OPEN with priority $h(p, \sAttract)$
         \EndIf
     \EndFor
-\EndLoop
+\EndWhile
+       \State \Return (OPEN, $\infty$)
 
 \EndProcedure
 \end{algorithmic}
@@ -482,14 +474,11 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
 
 \subsubsection{Query Phase}
 Given a query goal state $s_{\text{goal}} \in G_\calS$ 
-our algorithm, detailed in Alg.~\ref{alg:3}, starts by finding a subregion $R_i \in \calR$ which covers it (Line.~\ref{alg:3:covers}). Namely, a region~$R_i$ for which 
+our algorithm, detailed in Alg.~\ref{alg:3}, starts by finding a subregion $R_i \in \calR$ which covers it (line.~\ref{alg:3:covers}). Namely, a region~$R_i$ for which 
 $h(s_{\text{goal}}, \sAttract) < r_i$.
-We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract (Lines~\ref{alg:3:greedy-call} and~\ref{alg:3:greedy-call-start}-~\ref{alg:3:greedy-call-end}). 
-The greedy path~$\pi_g$ is then appended to the corresponding precomputed path~$\pi_i \in \calL$ (Line~\ref{alg:3:return}). 
-Note that at no point  do we need to perform collision checking in the query phase.
-
-\textbf{Remark}: Throughout this section we assumed that the underlying graph is symmetric (namely if there is an edge between $s$ and $s'$, then there is an edge between $s'$ and $s$). This was done for ease of exposition. In the general case, we would have to alter our reachability search (Alg.~\ref{alg:2}) to consider the predecessors of a given state and not its successors (see, line~\ref{alg:2:greedy}). 
-
+We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract (lines~\ref{alg:3:greedy-call} and~\ref{alg:3:greedy-call-start}-~\ref{alg:3:greedy-call-end}). 
+The greedy path~$\pi_g$ is then appended to the corresponding precomputed path~$\pi_i \in \calL$ (line~\ref{alg:3:return}). 
+Note that at no point  do we need to perform collision checking in the query phase (given the fact that the environment is static).
 
 \begin{algorithm}[t]
 \footnotesize
@@ -532,21 +521,21 @@ Note that at no point  do we need to perform collision checking in the query pha
 \subsubsection{Ordering regions for faster queries}
 Recall that in the query phase we iterate over all regions to find a region that covers \sGoal. 
 In the worst case we will have to go over all regions.
-However, as we will see in our evaluation (Sec.~\ref{sec:eval}), our algorithm typically covers most of the goal region $G_\calS$ using a few very large regions (namely, with a large radii~$r_i$) and the rest of $G_\calS$ is covered by a large number of very small regions.
+However, as we will see in our evaluation (Sec.~\ref{sec:eval}), our algorithm typically covers most of the goal region $G_\calS$ using a few very large regions (namely, with a large radii~$r_i$) and the rest of $G_\calS$ is covered by a number of very small regions.
 
 Thus, if we order our regions according to their corresponding radii, there is a higher chance of finding a covering region faster. While this optimization does not change our worst-case analysis (Sec.~\ref{sec:analysis}), it can speed up the query time in case the number of subregions is very large.
 
 \subsubsection{Efficiently constructing $\calL$}
-Constructing paths from attractor states (Alg.~\ref{alg:1}, Line~\ref{alg:1:pp}) can be done using any motion planning algorithm.
+Constructing paths from attractor states (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}) can be done using any motion planning algorithm.
 In our implementation we chose to use \textsf{RRT-Connect}~\cite{KL00}.
 Interestingly, this step dominates the running time of the preprocessing step.
 %
 To improve the preprocessing time, we initially set a small timeout for \textsf{RRT-Connect} to compute a path from an attractor state $\sAttract$ to $\sStart$.
 Attractor states for which \textsf{RRT-Connect} fails to find a path to $\sStart$ are marked as \textit{bad} attractors and we do not grow the subregions from them. 
 These, so-called \textit{bad} attractors are discarded when other regions cover them.
-In practice, most of the bad attractor states automatically get covered by other subregions. 
+%In practice, most of the bad attractor states automatically get covered by other subregions. 
 
-When Alg.~\ref{alg:1} terminations we reload the valid list $V$ with the remaining bad attractors and rerun Alg.~\ref{alg:1} but this time with a large timeout for \textsf{RRT-Connect}. 
+When Alg.~\ref{alg:1} terminates, we reload the valid list $V$ with the remaining bad attractors and rerun Alg.~\ref{alg:1} but this time with a large timeout for \textsf{RRT-Connect}. 
 %
 We can also increase the timeout with smaller increments and run Alg.~\ref{alg:1} iteratively until there are no more bad attractors (assuming that there exists a solution for each goal state $\in$ $G_\calS$).
 
@@ -579,9 +568,9 @@ Every state $s \in S_{\text{reachable}}$ is reachable with respect to \sAttract.
 %
 \begin{proof}
 The proof is constructed by an induction over the states added to $S_{\text{reachable}}$.
-The base of the induction is trivial as the first state added to $S_{\text{reachable}}$  is \sAttract (Line~\ref{alg:2:reachable}) which, by definition, is reachable with respect to \sAttract.
+The base of the induction is trivial as the first state added to $S_{\text{reachable}}$  is \sAttract (line~\ref{alg:2:reachable}) which, by definition, is reachable with respect to \sAttract.
 %
-A state $s$ is added to $S_{\text{reachable}}$ only if its greedy successor is in $S_{\text{reachable}}$ (Line~\ref{alg:2:greedy}) which by the induction hypothesis is reachable with respect to \sAttract.
+A state $s$ is added to $S_{\text{reachable}}$ only if its greedy successor is in $S_{\text{reachable}}$ (line~\ref{alg:2:greedy}) which by the induction hypothesis is reachable with respect to \sAttract.
 This implies by definition that $s$ is reachable with respect to \sAttract.
 %
 Note that this argument is true because the greedy successor of every state is unique (Assumption~\ref{assum:3}).
@@ -595,14 +584,14 @@ A state $s$ is in $S_{\text{reachable}}$ iff $h(s, \sAttract) < r_i$.
 \end{lemma}
 
 \begin{proof}
-Alg.~\ref{alg:2} orders the nodes to be inserted to $S_{\text{reachable}}$ according to $h(s, \sAttract)$ (Line~\ref{alg:2:OPEN}).
-As our heuristic function is weakly monotonic (Assumption~\ref{assum:2}), the value of $r_i$ monotonically increases as the algorithm adds states to $S_{\text{reachable}}$ (Line~\ref{alg:2:rad}).
+Alg.~\ref{alg:2} orders the nodes to be inserted to $S_{\text{reachable}}$ according to $h(s, \sAttract)$ (line~\ref{alg:2:OPEN}).
+As our heuristic function is weakly monotonic (Assumption~\ref{assum:2}), the value of $r_i$ monotonically increases as the algorithm adds states to $S_{\text{reachable}}$ (line~\ref{alg:2:rad}).
 Thus, for every state $s \in S_{\text{reachable}}$, we have that $h(s, \sAttract) < r_i$.
 
 For the opposite direction, assume that there exists a state $s \notin S_{\text{reachable}}$ such that $h(s, \sAttract) \leq r_i$.
 This may be because  Alg.~\ref{alg:2} terminated due to a node $s'$ that was popped from the open list with 
 $h(s', \sAttract) \geq r_i$.
-However, using the fact that our heuristic function is weakly monotonic (Assumption~~\ref{assum:2}) we get a contradiction to the fact that $h(s, \sAttract) \leq r_i$.
+However, using the fact that our heuristic function is weakly monotonic (Assumption~\ref{assum:2}) we get a contradiction to the fact that $h(s, \sAttract) \leq r_i$.
 Alternatively, this may be bacuse we prun away states that are in $G_\calS$. 
 However, using the fact that our goal region is conves with respect to $h$ (Assumption~~\ref{assum:2}), this cannot hold.
 \end{proof}
@@ -620,7 +609,7 @@ Given a state $s \in R_i$, we know that $s \in S_{\text{reachable}}$ (Lemma~\ref
 and that it is reachable with respect to \sAttract (Lemma~\ref{lemma:reachable-1}).
 %
 It is easy to show (by induction) that any greedy search starting at a state $S_{\text{reachable}}$ will only output states in $S_{\text{reachable}}$.
-Furtheremore, a state is added to $S_{\text{reachable}}$ only if the edge connecting to its greedy successor is valid (Line~\ref{alg:2:crit}).
+Furthermore, a state is added to $S_{\text{reachable}}$ only if the edge connecting to its greedy successor is valid (line~\ref{alg:2:crit}).
 Thus, if $s\in S_{\text{reachable}}$ is valid, the greedy search with respect to $h(s, \sAttract)$  starting from $s$ is complete and valid.
 \end{proof}
 
@@ -629,9 +618,9 @@ Thus, if $s\in S_{\text{reachable}}$ is valid, the greedy search with respect to
 At the end of Alg.~\ref{alg:1}, every state $s \in G_\calS$ is covered by some region $R \in \calR$.
 \end{lemma}
 \begin{proof}
-Assume that this does not hold and let $s \in G_\calS$ be a state that is not covered by any region but has a neighbor that is covered.
+Assume that this does not hold and let $s \in G_\calS$ be a state that is not covered by any region but has a neighbor (valid or invalid) that is covered.
 %
-If $s$ is valid, then it would have been in the valid frontier states $V$ and either been picked to be an attractor state (Line~\ref{alg:1:attract}) or covered by an existing region (Alg.~\ref{alg:2}).
+If $s$ is valid, then it would have been in the valid frontier states $V$ and either been picked to be an attractor state (line~\ref{alg:1:attract}) or covered by an existing region (Alg.~\ref{alg:2}).
 %
 A similar argument holds if $s$ is not valid.
 \end{proof}
@@ -647,8 +636,8 @@ From the above we can immediately deduce the following corollary:
 
 \textbf{Remark}
 We can relax Assumption~\ref{assum:2} in two ways.
-The first, is by explicitly tracking states not in the goal region instead of pruning them away (Alg.~\ref{alg:2} Line~\ref{alg:2:prun}) and terminating not only when we found a valid state whose successor is invalid (Line~\ref{alg:2:crit}) but also when we found a state in $G_\calS$ whose successor is not in $G_\calS$.
-Unfortunately, this may require the algorithm to store many states not in $G_\calS$  which may be impractical (recall that Assumption~\ref{assump:1} only states that we can exhaustively cover the states in the goal region).
+The first, is by explicitly tracking states not in the goal region instead of pruning them away (Alg.~\ref{alg:2} line~\ref{alg:2:prun}) and terminating not only when we found a valid state whose successor is invalid (line~\ref{alg:2:crit}) but also when we found a state in $G_\calS$ whose successor is not in $G_\calS$.
+Unfortunately, this may require the algorithm to store many states not in $G_\calS$  which may be impractical (recall that Assumption~\ref{assum:1} only states that we can exhaustively cover the states in the goal region).
 An alternative, more practical way, to relax Assumption~\ref{assum:2}  is by terminating the search when we  encounter a state not in the goal region.
 This may cause the algorithm to generate much more regions (with smaller radii) which may increase the memory footprint and the preprocessing times.
 
@@ -694,8 +683,8 @@ and
 (ii)~running the greedy search to $\sAttract$.
 Step (i) requires iterating over all subregions (in the worst case) which takes $O(|\calR|)$ steps while 
 step (ii) requires expanding the states along the path from $\sGoal$ to $\sAttract$ which requires~$O(\calD)$ expansions where $\calD$ is the depth (maximal number of expansions of a greedy search) of the deepest subregion. 
-For each expandion we need to find the greedy successor, considering at most $b$ successor, where $B$ is the maximal branching factor of our graph.
-We can measure the depth of each subregion in Alg.~\ref{alg:2} by keeping track of the depth of each expanded state from the root i.e. the $\sAttract$. Hence, overall the query phases takes $O(|\calR| + \calD \cdot b)$ operations. The maximal query time can also be empirically computed after the preprocessing phase.
+For each expansion we need to find the greedy successor, considering at most $b$ successors, where $B$ is the maximal branching factor of our graph.
+We can measure the depth of each subregion in Alg.~\ref{alg:2} by keeping track of the depth of each expanded state from the root i.e., $\sAttract$. Hence, overall the query phases takes $O(|\calR| + \calD \cdot b)$ operations. The maximal query time can also be empirically computed after the preprocessing phase.
 
 %
 \textbf{Remark:}
@@ -726,7 +715,7 @@ Having said that, this may come at the price of increasing the number of regions
          Memory usage [Mb] & 1,828 & 225.75 & 2.0 & - & \textbf{7.8}
         \end{tabular}
     }
-    \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with quadruple the time that our method takes in precomputation (T = 1,569 seconds). Note that the worst-case time for our method shown in these results ($\sim$1.6 millisecond) is the empirical one and not the computed provable time bound which is 3 milliseconds for this environment.
+    \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with quadruple the time that our method takes in precomputation (T = 1,445 seconds). Note that the worst-case time for our method shown in these results ($\sim$1.6 millisecond) is the empirical one and not the computed provable time bound which is 3 milliseconds for this environment.
     Results of sampling-based planners are averaged over 200 trials. For the sampling-based planners the results were averaged over 4 trials for the same set of 200 trials with different random number generation seeds.}
     \label{tab:stats}
   % \end{center}
@@ -735,11 +724,11 @@ Having said that, this may come at the price of increasing the number of regions
 
 We evaluated our algorithm on the PR2 robot for a single-arm (7 DOF) motion-planning problem. The illustrated task here is to pick up objects from the cubby shelf (see Fig.~\ref{fig:PR2}) and drop them off in the grey basket. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop of location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions and orientations of the end effector within the cubby shelf.
 
-The search is done on an implicit graph $G_\calS$ constructed by using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. 
+The search is done on an implicit graph $G_\calS$ constructed using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. 
 The heurstic function is the Euclidean distance in these 7 dimensions. The discretization we use for the graph $G_\calS$ is two~cm for the position axes, ten degrees for the Euler axes and five degrees for the redundant joint. 
-For this domain, we keep the $\textit{pitch}$ and $\textit{roll}$ of the end effector fixed and allow motion primitives along the remaining five dimensions i.e. $\textit{x, y, z, yaw}$ and the reduntant joint angle. We also limit the $\textit{yaw}$ to be between negative thirty and thirty degrees. Note that the specification of the $G_\calS$ is purely task specific and we exploit the task constraints to limit the size of $G_\calS$ which makes our preprocessing step tractable (Assumption~\ref{assump:1}).
+For this domain, we keep the $\textit{pitch}$ and $\textit{roll}$ of the end effector fixed and allow motion primitives along the remaining five dimensions i.e. $\textit{x, y, z, yaw}$ and the reduntant joint angle. We also limit the $\textit{yaw}$ to be between negative thirty and thirty degrees. Note that the specification of the $G_\calS$ is purely task specific and we exploit the task constraints to limit the size of $G_\calS$ which makes our preprocessing step tractable (Assumption~\ref{assum:1}).
 
-We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 uniformly sampled goal states from $G$. Among the multi-query planners, we implemented \textsf{PRM}, a multi-query version of \textsf{RRT} which we name as MQ-RRT and the E-graph planner. As $\sStart$ in our setting is fixed we can precompute a dense RRT tree offline (similar to PRM) and query it by trying to connect $\sGoal$ to the nearest nodes of the precomputed RRT tree. We use the same connection strategy for MQ-RRT as the one that the probablisitically complete version of PRM uses i.e. connecting to~$k$ nearest neigbors where~$k$ depends on the cardinality of the roadmap i.e.,~$k = e(1+1/d)log(n)$ where $n$ is the number of nodes in the tree/roadmap and $d$ is the dimensionality of the configuration space~\cite{karaman2011sampling,SSH16}. 
+We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 uniformly sampled goal states from $G$. Among the multi-query planners, we implemented \textsf{PRM}, a multi-query version of \textsf{RRT} which we name as MQ-RRT and the E-graph planner. As $\sStart$ in our setting is fixed we can precompute a dense RRT tree offline (similar to PRM) and query it by trying to connect $\sGoal$ to the nearest nodes of the precomputed RRT tree. We use the same connection strategy for MQ-RRT as the one that the asymptotically-optimal version of PRM uses i.e., connecting to~$k$ nearest neigbors where~$k$ depends on the cardinality of the roadmap i.e.,~$k = e(1+1/d)log(n)$ where $n$ is the number of nodes in the tree/roadmap and $d$ is the dimensionality of the configuration space~\cite{karaman2011sampling,SSH16}. 
 In case of \textsf{PRM}, for fairness we precomputed the paths from all the nodes in~$G$ to~$s_{\text{start}}$ (this is analogous to our library~$\calL$). 
 The query stage thus only required the connect operation (i.e. attempting to connect to $k$ nearest neighbors of $\sGoal$). For both of these planners we also added a goal-region bias by directly sampling from~$G$, five percent of the time\footnote{We used OMPL~\cite{SMK12} for comparisons with the sampling-based planners and modified the implementations as per needed.}. 
 
@@ -749,7 +738,7 @@ For our method, preprocessing (Alg.~\ref{alg:1}) took 1,445 seconds and returned
 
 Table~\ref{tab:stats} shows the numerical results of our experiments. Our method being provably guaranteed to find a plan in bounded time, shows a success rate of 100 percent. For the two preprocessing-based planners PRM and MQ-RRT, we report the results for a preprocessing time of 4T (T being the time consumed by our method in preprocessing). The E-graph planner is bootstrapped with a hundred paths precomputed for uniformly sampled goals in $G_S$. For each of these three multi-query planners while running the experiments, the newly created edges were appended to the auxilary data (tree, roadmap or E-graph) for the subsequent queries.
 
-Among other planners, PRM shows the highest success rate but at the cost of a large memory footprint. The E-graph planner has a small memory footprint but it shows significantly longer planning times. RRT-Connect being a single-query planner happens to be the slowest. Our method shows a speedup of over tenfold in query time as compared to PRM and MQ-RRT about three orders of magnitude speedup over the E-graph planner and RRT-Connect. The plots in Fig.~\ref{fig:plots} show how the success rate and the memory footprints of PRM and MQ-RRT vary as a function of the preprocessing time. For our domain the PRM seems to saturate in terms of the success rate after T time whereas MQ-RRT continues to improve provided more preprocessing time whereas in terms of memory usage, PRM's memory footprint grows more rapidly than MQ-RRT.
+Among other planners, PRM shows the highest success rate but at the cost of a large memory footprint. The E-graph planner has a small memory footprint but it shows significantly longer planning times. RRT-Connect being a single-query planner happens to be the slowest. Our method shows a speedup of over tenfold in query time as compared to PRM and MQ-RRT and about three orders of magnitude speedup over the E-graph planner and RRT-Connect. The plots in Fig.~\ref{fig:plots} show how the success rate and the memory footprints of PRM and MQ-RRT vary as a function of the preprocessing time. For our domain the PRM seems to saturate in terms of the success rate after T time whereas MQ-RRT continues to improve provided more preprocessing time whereas in terms of memory usage, PRM's memory footprint grows more rapidly than MQ-RRT.
 \begin{figure*}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -764,7 +753,7 @@ Among other planners, PRM shows the highest success rate but at the cost of a la
         \caption{}
         \label{fig:memory}
     \end{subfigure}
-    \caption{The plots shows the preprocessing time versus (\subref{fig:success}) the success rates and (\subref{fig:memory}) for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The red cross shows our method for reference.}
+    \caption{Preprocessing time vs. (\subref{fig:success}) the success rates and (\subref{fig:memory}) memory useage for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The green cross shows our method for reference.}
     \label{fig:plots}
 \end{figure*}
 
@@ -774,6 +763,7 @@ We proposed a preprocessing-based motion planning algorithm that provides provab
 %We aim to perform experiments on the hardware with the conveyor setup to demonstrate the efficiency of our planner on a real world system.
 Key questions that remain open for future work regard providing guarantees on the solution quality and bounding the number of covering regions.
 We conjuncture that computing the minimal number of regions is an \textsf{NP-Hard} problem and, if this is the case, seek to compute a set of regions whose size is within some constant-factor approximation of  the size of the optimal set.
+Finally, we plan to extend our approach to non static, yet similar environments where there are only small changes in the environment. 
 %\vfill
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{aaai}

@@ -335,6 +335,26 @@ $\calR, \calL$
 
 
 \begin{algorithmic}[1]
+\Procedure{FindValidUncoveredState}{$\hat{s}$}
+\State OPEN $\leftarrow \{\hat{s}\}$
+\While{OPEN$\neq \emptyset$}
+  \State $s \leftarrow$ OPEN.pop()
+  \State insert $s$ in CLOSED
+  \If {$\nexists R \in \calR$  s.t. $s \in R$ and Valid(s)}
+  % \Comment{$s$ is not covered and $s$ is valid}
+    \State \Return ($\{s\}$, $h$($s$, $\hat{s}$))
+  \EndIf
+  \For {each $s' \in (\text{Succs}(s) \cup \text{Preds}(s)) \cap G_\calS$} \label{alg:2:prun}
+    \If {$s' \notin$ CLOSED}
+        \State insert $s'$ in OPEN with priority $h(s', \sAttract)$
+    \EndIf
+  \EndFor
+\EndWhile
+\State $r = h$($s$, $\hat{s})) + \epsilon$
+\State \Return ($\emptyset$, $r$))
+\EndProcedure
+\vspace{2mm}
+
 \Procedure{PreprocessRegion}{$G_\calS$}
 %\Procedure{PreprocessRegion}{$G, r_{\text{max}}$}
   \State $s \leftarrow$\textsc{ SampleValidState}($G_\calS$)
@@ -374,8 +394,8 @@ $\calR, \calL$
         \While {$I$ is not empty} \label{alg:1:iv_loop}
             \State $s$ $\leftarrow$ $I.pop()$
 			\If {$\nexists R \in \calR \cup \hat{\calR}$ s.t. $s \in R$ }      \Comment{$s$ is not covered}
-\State $(X, r)$ $\leftarrow$ \textsc{SearchValidUncoveredStates}($s$)
-%                \State $(X, r)$ $\leftarrow$ \textsc{SearchValidUncoveredStates}($s, r_{\text{max}}$)
+\State $(X, r)$ $\leftarrow$ \textsc{FindValidUncoveredState}($s$)
+%                \State $(X, r)$ $\leftarrow$ \textsc{FindValidUncoveredState}($s, r_{\text{max}}$)
                 \State $\hat{R}$ $\leftarrow$ $(s,r)$;
 				\hspace{2mm}
 				$\hat{\calR} \leftarrow \hat{\calR} \cup \{ \hat{R} \}$ \Comment{invalid region}  \label{alg:1:iv_region}
@@ -465,7 +485,8 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
         \EndIf
     \EndFor
 \EndWhile
-       \State \Return (OPEN, $\infty$)
+\State $r_i \leftarrow h(s, \sAttract) + \epsilon$
+\State \Return (OPEN, $r_i$)
 
 \EndProcedure
 \end{algorithmic}

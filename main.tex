@@ -145,6 +145,8 @@ However, to the extent of our knowledge, there is no approach that can \emph{pro
 %\vspace{8 mm}
 
 %6. What is our ONE key insight?
+In this work, we consider the specific case where the goal is fixed. Returning to our running example, this corresponds to having a fixed drop-off location above the bin.
+%
 Our key insight is that given any state $s$, we can efficiently compute a set of states for which a greedy search (to be defined formally in Sec.~\ref{sec:alg}) towards~$s$ is collision free.
 Importantly, the runtime-complexity of such a greedy search is bounded and there is no need to perform computationally-complex collision-detection operations. 
 This insight allows us to generate in an offline phase a small set of so-called ``attractor vertices'' together with a path between each attractor vertex and the goal.
@@ -318,7 +320,7 @@ The search terminates with the region's radius $r_i$ and a list of frontier stat
 The valid and invalid frontier states are then added to $V$ and $I$, respectively (lines~\ref{alg:1:insert_v} and~\ref{alg:1:insert_i}).
 
 
-Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around the states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G_\calS$ is covered by at least one subregion.
+Once $V$ gets empty the algorithm starts to search for states which are valid and yet uncovered by growing regions around invalid states popped from~$I$ (lines~\ref{alg:1:iv_loop}-\ref{alg:1:iv_region} and detailed in Alg.~\ref{alg:3b}). If a valid and uncovered state is found, it is added to $V$ and the algorithm goes back to computing subregions (lines~\ref{alg:1:x_states}-\ref{alg:1:break}), otherwise if $I$ also gets empty, the algorithm terminates and it is guaranteed that each valid state contained in $G_\calS$ is covered by at least one subregion.
 
 \begin{algorithm}[t]
 \footnotesize
@@ -333,29 +335,7 @@ $\calR, \calL$
 %\hspace*{\algorithmicindent}
 % \textbf{Parameters:} $r_{\text{max}}$   \Comment{maximum radius of a region}
 \caption{Goal Region Preprocessing}\label{alg:1}
-
-
 \begin{algorithmic}[1]
-\Procedure{FindValidUncoveredState}{$\hat{s}$}
-\State OPEN $\leftarrow \{\hat{s}\}$
-\While{OPEN$\neq \emptyset$}
-  \State $s \leftarrow$ OPEN.pop()
-  \State insert $s$ in CLOSED
-  \If {$\nexists R \in \calR$  s.t. $s \in R$ and Valid(s)}
-  % \Comment{$s$ is not covered and $s$ is valid}
-    \State \Return ($\{s\}$, $h$($s$, $\hat{s}$))
-  \EndIf
-  \For {each $s' \in (\text{Succs}(s) \cup \text{Preds}(s)) \cap G_\calS$} \label{alg:2:prun}
-    \If {$s' \notin$ CLOSED}
-        \State insert $s'$ in OPEN with priority $h(s', \sAttract)$
-    \EndIf
-  \EndFor
-\EndWhile
-\State $r = h$($s$, $\hat{s})) + \epsilon$
-\State \Return ($\emptyset$, $r$))
-\EndProcedure
-\vspace{2mm}
-
 \Procedure{PreprocessRegion}{$G_\calS$}
 %\Procedure{PreprocessRegion}{$G, r_{\text{max}}$}
   \State $s \leftarrow$\textsc{ SampleValidState}($G_\calS$)
@@ -493,6 +473,33 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
 \end{algorithmic}
 \end{algorithm}
 
+\begin{algorithm}[t]
+\footnotesize
+\caption{Find valid uncovered state}\label{alg:3b}
+
+\begin{algorithmic}[1]
+\Procedure{FindValidUncoveredState}{$\hat{s}$}
+\State OPEN $\leftarrow \{\hat{s}\}$
+\While{OPEN$\neq \emptyset$}
+  \State $s \leftarrow$ OPEN.pop()
+  \State insert $s$ in CLOSED
+  \If {$\nexists R \in \calR$  s.t. $s \in R$ and Valid(s)}
+  % \Comment{$s$ is not covered and $s$ is valid}
+    \State \Return ($\{s\}$, $h$($s$, $\hat{s}$))
+  \EndIf
+  \For {each $s' \in \text{Preds}(s) \cap G_\calS$} \label{alg:2:prun}
+    \If {$s' \notin$ CLOSED}
+        \State insert $s'$ in OPEN with priority $h(s', \sAttract)$
+    \EndIf
+  \EndFor
+\EndWhile
+\State $r = h$($s$, $\hat{s})) + \epsilon$
+\State \Return ($\emptyset$, $r$))
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
 \subsubsection{Query Phase}
 Given a query goal state $s_{\text{goal}} \in G_\calS$ 
 our algorithm, detailed in Alg.~\ref{alg:3}, starts by finding a subregion $R_i \in \calR$ which covers it (line.~\ref{alg:3:covers}). Namely, a region~$R_i$ for which 
@@ -611,7 +618,7 @@ Thus, for every state $s \in S_{\text{reachable}}$, we have that $h(s, \sAttract
 
 For the opposite direction, assume that there exists a state $s \notin S_{\text{reachable}}$ such that $h(s, \sAttract) \leq r_i$.
 This may be because  Alg.~\ref{alg:2} terminated due to a node $s'$ that was popped from the open list with 
-$h(s', \sAttract) \geq r_i$.
+$h(s', \sAttract) < h(s, \sAttract)$.
 However, using the fact that our heuristic function is weakly monotonic (Assumption~\ref{assum:2}) we get a contradiction to the fact that $h(s, \sAttract) \leq r_i$.
 Alternatively, this may be because we prune away states that are in $G_\calS$  (Alg.~\ref{alg:2} line~\ref{alg:2:prun}).
 However, using the fact that our goal region is convex with respect to $h$ (Assumption~~\ref{assum:2}), this cannot hold.

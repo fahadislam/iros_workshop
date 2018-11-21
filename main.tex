@@ -206,8 +206,8 @@ In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ wh
 
 Coming back to our motivating example of picking items from  shelves and placing them into a bin---the start configuration would be some predefined configuration above the bin where the robot can drop off the item and the goal region would be all possible placements of the robot's end effector that can grasp an object in one shelf. The environment is static as the only abstacles are the shelves and the bin which do not change between queries.
 
-We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors via a mapping Succs: $\calS \rightarrow 2^\calS$ and assume for simplicity  that the induced graph is undirected (namely, $\forall s,s'~s.t.~ s' \in \text{Succ} (s)$ we have that $s \in \text{Succ} (s')$).
-Define $G_\calS := \calS \cap G$ to be the states that reside in the goal region.
+We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors and predecessors via a mapping Succs/Preds: $\calS \rightarrow 2^\calS$.
+Define $G_\calS := \calS \cap G$ to be the states that reside in the goal region. Note that although our approach is applicable to general graphs (directed or undirected), to be able to reuse the planned path in the reverse direction (e.g. in our motivating example for the motion from the shelve to the start configuration) the graph needs to be undirected.
 We make the following assumptions:
 
 \begin{enumerate}[label={\textbf{A\arabic*}}]
@@ -218,17 +218,17 @@ However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
  \begin{itemize}
  	\item The heuristic function should be \textit{weakly-monotone} with respect to $G_\calS$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
-    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2)$.
+    $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Preds}(s_1)} h(s_1', s_2)$.
   \end{center}
 
 	\item The heuristic $h$ function should induce that the goal region is \emph{convex} with respect to $h$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
-     $\argmin\limits_{s_1' \in \text{Succs}(s_1)} h(s_1', s_2) \in G_\calS$.
+     $\argmin\limits_{s_1' \in \text{Preds}(s_1)} h(s_1', s_2) \in G_\calS$.
   \end{center}
 
  \end{itemize}
- Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s successors has a heuristic value less than or equal to its heuristic value.
- Moreover, the successor with minimal heuristic value lies in the goal region.
+ Namely, for any distinct pair of states ($s_1, s_2$) in $G_\calS$, at least one of $s_1$'s predecessors has a heuristic value less than or equal to its heuristic value.
+ Moreover, the predecessor with minimal heuristic value lies in the goal region.
 
 
   \item \label{assum:3} The planner has access to a tie-breaking rule that can be used to define a total order \footnote{A total order is a binary relation on some set which is anti-symmetric, transitive, and a convex relation.} over all states with the same heuristic value.
@@ -245,25 +245,25 @@ Assumption~\ref{assum:2} may seem too restrictive (especially convexity), imposi
  
 \subsection{Key idea}
 \label{sec:key}
-Our algorithm relies heavily on the notion of a greedy search.  Thus, before we describe of our algorithm, we formally define the terms greedy successor and greedy search.
+Our algorithm relies heavily on the notion of a greedy search.  Thus, before we describe of our algorithm, we formally define the terms greedy predecessor and greedy search.
 
 \vspace{2mm}
 \begin{definition}
 \label{def:greedy-suc}
 	Let $s$ be some state and $h(\cdot)$ be some heuristic function.
-	A state $s' \in \text{Succ}(s)$ is said to be a \emph{greedy} successor of $s$ according to $h$ if it has the minimal $h$-value among all of $s$'s successors.
+	A state $s' \in \text{Preds}(s)$ is said to be a \emph{greedy} predecessor of $s$ according to $h$ if it has the minimal $h$-value among all of $s$'s predecessors.
 \end{definition}
 Note that 
 if $h$ is weakly monotone with respect to $G_\calS$
 (Assumption~\ref{assum:2}) 
 and we have some tie-breaking rule
-(Assumption~\ref{assum:3}), then every state has a greedy successor in the $G_\calS$ and it is unique.
-In the rest of the text, when we use the term greedy successor, we assume that it is unique and in $G_\calS$.
+(Assumption~\ref{assum:3}), then every state has a greedy predecessor in the $G_\calS$ and it is unique.
+In the rest of the text, when we use the term greedy predecessor, we assume that it is unique and in $G_\calS$.
 
 \vspace{2mm}
 \begin{definition}
 	Given a heuristic function $h(\cdot)$,
-	an algorithm is said to be a \emph{greedy search}	 with respect to $h$ if for every state it returns its greedy successor according to $h$.
+	an algorithm is said to be a \emph{greedy search}	 with respect to $h$ if for every state it returns its greedy predecessor according to $h$.
 \end{definition}
 
 \textbf{Remark:} Now that we have the notion of greedy search, we can better explain our definition of convexity with respect to~$h$ (Assumption~\ref{assum:2});
@@ -283,7 +283,7 @@ These regions, which may contain invalid states, are constructed in such a way t
 In the preprocessing stage, we precompute a library of collision-free paths $\calL$ which includes one path from $\sStart$ to each attractor state. 
 In the query phase, given a query~\sGoal, we 
 (i)~identify a region $R_i$ such that $\sGoal \in R_i$ (using the precomputed radii~$r_i$),
-(ii)~run a greedy search towards~\sAttract by greedily choosing at every point the successor that minimizes~$h$ and
+(ii)~run a greedy search towards~\sAttract by greedily choosing at every point the predecessor that minimizes~$h$ and
 (iii)~append this path with the precomputed path in $\calL$ to $\sStart$ to obtain the complete plan.
 For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 
@@ -296,7 +296,7 @@ For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
   Visualization of approach. Subregions are depicted in green, 
   goal region~$G$ is depicted in tilled gray  containing obstacles (red).
   Precomputed paths from attractor states to $s_{\rm{start}}$ are depicted in blue.
- Given a query $(s_{\rm{start}}, s_{\rm{goal}})$, the returned path is given by $\pi_i$ and a greedy path~$\pi_g$ to \sAttract which is depicted in purple. 
+ Given a query $(s_{\rm{start}}, s_{\rm{goal}})$, the returned path is given by $\pi_i$ and a greedy path~$\pi_g$ to \sAttract which is depicted in purple.
 }
    	\label{fig:approach}
 % \vspace{-6mm}
@@ -417,18 +417,18 @@ The following recursive definition formally captures the notion of a reachable s
 \begin{definition}
 	Given some attractor state \sAttract, we say that a state $s \in G_\calS$ is reachable under some function $h(\cdot)$ with respect to \sAttract if either
 	(i)~$s = \sAttract$ or
-	(ii)~the greedy successor of $s$ with respect to $h$ is reachable with respect to \sAttract.
+	(ii)~the greedy predecessor of $s$ with respect to $h$ is reachable with respect to \sAttract.
 \end{definition}
 
 %Namely, the greedy successor $s'$ of every reachable state $s \in S_{\text{reachable}}$ is also a reachable state, except for the attractor state \sAttract. 
 %This will ensure that in the query phase, we can run a greedy search from any reachable state $s \in S_{\text{reachable}}$ and it will terminate in the attractor state. 
 
 The algorithm computes a subregion that covers the maximum number of reachable states that can fit into a hyper-ball defined by $h(s,\sAttract)$. 
-The search maintains a priority queue OPEN ordered according to $h(s,\sAttract)$. Initially, the predecessors of $\sAttract$ are inserted in the OPEN (line~\ref{alg:2:OPEN}). For each expanded predecessor, if its valid greedy successor is in $S_{\text{reachable}}$, then the predecessor is also labeled as reachable (lines~\ref{alg:2:crit} and~\ref{alg:2:set}). 
+The search maintains a priority queue OPEN ordered according to $h(s,\sAttract)$. Initially, the successors of $\sAttract$ are inserted in the OPEN (line~\ref{alg:2:OPEN}). For each expanded successor, if its valid greedy predecessor is in $S_{\text{reachable}}$, then the successor is also labeled as reachable (lines~\ref{alg:2:crit} and~\ref{alg:2:set}). 
 %As the priority used for OPEN is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). 
 
 
-The algorithm terminates when the search pops a state which is valid but does not have a greedy successor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to  the condition when the reachability search exits an obstacle (see Fig.~\ref{fig:alg2}).
+The algorithm terminates when the search pops a state which is valid but does not have a greedy predecessor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to  the condition when the reachability search exits an obstacle (see Fig.~\ref{fig:alg2}).
 At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
 
 
@@ -440,7 +440,7 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
 \Procedure{ComputeReachability}{$\sAttract$}
 %\Procedure{ComputeReachability}{$\sAttract, r_{\text{max}}$}
 \State $S_{\text{reachable}} \leftarrow \{\sAttract\}$ \Comment{reachable set} \label{alg:2:reachable}
-\State OPEN $\leftarrow \{$Preds($\sAttract$)$\}$  \Comment{key: $h(s,\sAttract)$} \label{alg:2:OPEN}
+\State OPEN $\leftarrow \{$Succs($\sAttract$)$\}$  \Comment{key: $h(s,\sAttract)$} \label{alg:2:OPEN}
 \State CLOSED $\leftarrow \emptyset$
 \State $r_i \leftarrow 0$
 
@@ -448,7 +448,7 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
 \While{OPEN$\neq \emptyset$}
     \State $s \leftarrow$ OPEN.pop()
     \State insert $s$ in CLOSED
-    \State $s'_g \leftarrow \arg \min_{s' \in \text{Succ}(s)} h(s', \sAttract)$ 
+    \State $s'_g \leftarrow \arg \min_{s' \in \text{Preds}(s)} h(s', \sAttract)$ 
 %    \State $s'_g \leftarrow$ GreedySucc($s$)
 	\label{alg:2:greedy} 
  \Comment{greedy succesor}
@@ -460,9 +460,9 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
         \State \Return (OPEN, $r_i$)
 %        \State break
     \EndIf
-    \For {each $p \in \text{Preds}(s) \cap G_\calS$} \label{alg:2:prun}
-        \If {$p \notin$ CLOSED}
-            \State insert $p$ in OPEN with priority $h(p, \sAttract)$
+    \For {each $s' \in \text{Succs}(s) \cap G_\calS$} \label{alg:2:prun}
+        \If {$s' \notin$ CLOSED}
+            \State insert $s'$ in OPEN with priority $h(s', \sAttract)$
         \EndIf
     \EndFor
 \EndWhile
@@ -487,7 +487,7 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
   % \Comment{$s$ is not covered and $s$ is valid}
     \State \Return ($\{s\}$, $h$($s$, $\hat{s}$))
   \EndIf
-  \For {each $s' \in \text{Preds}(s) \cap G_\calS$} \label{alg:2:prun}
+  \For {each $s' \in \{\text{Succs}(s) \cup \text{Preds}(s)\} \cap G_\calS$} \label{alg:2:prun}
     \If {$s' \notin$ CLOSED}
         \State insert $s'$ in OPEN with priority $h(s', \sAttract)$
     \EndIf
@@ -504,7 +504,7 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
 Given a query goal state $s_{\text{goal}} \in G_\calS$ 
 our algorithm, detailed in Alg.~\ref{alg:3}, starts by finding a subregion $R_i \in \calR$ which covers it (line.~\ref{alg:3:covers}). Namely, a region~$R_i$ for which 
 $h(s_{\text{goal}}, \sAttract) < r_i$.
-We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the successor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract (lines~\ref{alg:3:greedy-call} and~\ref{alg:3:greedy-call-start}-~\ref{alg:3:greedy-call-end}). 
+We then run a greedy search starting from $s_{\text{goal}}$ by iteratively finding for each state $s$ the predecessor with the minimum heuristic $h(s, \sAttract)$ value until the search reaches \sAttract (lines~\ref{alg:3:greedy-call} and~\ref{alg:3:greedy-call-start}-~\ref{alg:3:greedy-call-end}). 
 The greedy path~$\pi_g$ is then appended to the corresponding precomputed path~$\pi_i \in \calL$ (line~\ref{alg:3:return}). 
 Note that at no point  do we need to perform collision checking in the query phase (given the fact that the environment is static).
 
@@ -519,7 +519,7 @@ Note that at no point  do we need to perform collision checking in the query pha
 	\While{$s_{\text{curr}} \neq s_2$}
 		\State $\pi \leftarrow \pi \cdot s_{\text{curr}}$
 		\Comment{append current state to path}
-    	\State $s_{\text{curr}} \leftarrow \arg \min_{s \in \text{Succ}(s_{\text{curr}})} h(s, s_2)$ 	\Comment{greedy succesor}
+    	\State $s_{\text{curr}} \leftarrow \arg \min_{s \in \text{Preds}(s_{\text{curr}})} h(s, s_2)$ 	\Comment{greedy succesor}
     \EndWhile
     \State \Return $\pi$
 \EndProcedure
@@ -598,10 +598,10 @@ Every state $s \in S_{\text{reachable}}$ is reachable with respect to \sAttract.
 The proof is constructed by an induction over the states added to $S_{\text{reachable}}$.
 The base of the induction is trivial as the first state added to $S_{\text{reachable}}$  is \sAttract (line~\ref{alg:2:reachable}) which, by definition, is reachable with respect to \sAttract.
 %
-A state $s$ is added to $S_{\text{reachable}}$ only if its greedy successor is in $S_{\text{reachable}}$ (line~\ref{alg:2:greedy}) which by the induction hypothesis is reachable with respect to \sAttract.
+A state $s$ is added to $S_{\text{reachable}}$ only if its greedy predecessor is in $S_{\text{reachable}}$ (line~\ref{alg:2:greedy}) which by the induction hypothesis is reachable with respect to \sAttract.
 This implies by definition that $s$ is reachable with respect to \sAttract.
 %
-Note that this argument is true because the greedy successor of every state is unique (Assumption~\ref{assum:3}).
+Note that this argument is true because the greedy predecessor of every state is unique (Assumption~\ref{assum:3}).
 \end{proof}
 
 \begin{lemma}
@@ -637,7 +637,7 @@ Given a state $s \in R_i$, we know that $s \in S_{\text{reachable}}$ (Lemma~\ref
 and that it is reachable with respect to \sAttract (Lemma~\ref{lemma:reachable-1}).
 %
 It is easy to show (by induction) that any greedy search starting at a state $S_{\text{reachable}}$ will only output states in $S_{\text{reachable}}$.
-Furthermore, a state is added to $S_{\text{reachable}}$ only if the edge connecting to its greedy successor is valid (line~\ref{alg:2:crit}).
+Furthermore, a state is added to $S_{\text{reachable}}$ only if the edge connecting to its greedy predecessor is valid (line~\ref{alg:2:crit}).
 Thus, if $s\in S_{\text{reachable}}$ is valid, the greedy search with respect to $h(s, \sAttract)$  starting from $s$ is complete and valid.
 \end{proof}
 
@@ -664,7 +664,7 @@ From the above we can immediately deduce the following corollary:
 
 \textbf{Remark}
 We can relax Assumption~\ref{assum:2} in two ways.
-The first is by explicitly tracking states not in the goal region instead of pruning them away (Alg.~\ref{alg:2} line~\ref{alg:2:prun}) and terminating not only when we found a valid state in $G_\calS$ whose successor is not reachable or is invalid (line~\ref{alg:2:crit}), but also when we found a state in $G_\calS$ whose successor is not in $G_\calS$.
+The first is by explicitly tracking states not in the goal region instead of pruning them away (Alg.~\ref{alg:2} line~\ref{alg:2:prun}) and terminating not only when we found a valid state in $G_\calS$ whose predecessor is not reachable or is invalid (line~\ref{alg:2:crit}), but also when we found a state in $G_\calS$ whose predecessor is not in $G_\calS$.
 Unfortunately, this may require the algorithm to store many states not in $G_\calS$  which may be impractical (recall that Assumption~\ref{assum:1} only states that we can exhaustively store in memory the states in the goal region).
 An alternative, more practical way, to relax Assumption~\ref{assum:2}  is by terminating the search when we  encounter a state not in the goal region.
 This may cause the algorithm to generate much more regions (with smaller radii) which may increase the memory footprint and the preprocessing times.
@@ -711,7 +711,7 @@ and
 (ii)~running the greedy search to $\sAttract$.
 Step~(i) requires iterating over all subregions (in the worst case) which takes $O(|\calR|)$ steps while 
 step~(ii) requires expanding the states along the path from $\sGoal$ to $\sAttract$ which requires~$O(\calD)$ expansions where $\calD$ is the depth (maximal number of expansions of a greedy search) of the deepest subregion. 
-For each expansion we need to find the greedy successor, considering at most $b$ successors, where $b$ is the maximal branching factor of our graph.
+For each expansion we need to find the greedy predecessor, considering at most $b$ predecessors, where $b$ is the maximal branching factor of our graph.
 We can measure the depth of each subregion in Alg.~\ref{alg:2} by keeping track of the depth of each expanded state from the root i.e., $\sAttract$. Hence, overall the query phases takes $O(|\calR| + \calD \cdot b)$ operations. The maximal query time can also be empirically computed after the preprocessing phase.
 
 %

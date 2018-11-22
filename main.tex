@@ -750,6 +750,24 @@ Having said that, this may come at the price of increasing the number of regions
 % \vspace{-6mm}
 \end{table*}
 
+\begin{figure*}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{success.png}
+        \caption{}
+        \label{fig:success}
+    \end{subfigure}
+    ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+      %(or a blank line to force the subfigure onto a new line)
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{memory.png}
+        \caption{}
+        \label{fig:memory}
+    \end{subfigure}
+    \caption{Preprocessing time vs. (\subref{fig:success}) the success rates and (\subref{fig:memory}) memory useage for the 200 queries averaged over 4 trials with different random number generation seeds for the \textsf{PRM} and the \textsf{MQ-RRT} algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The green cross shows our method for reference.}
+    \label{fig:plots}
+\end{figure*}
+
 We evaluated our algorithm on the PR2 robot for a single-arm (7 DOF) motion-planning problem. The illustrated task here is to pick up objects from the cubby shelf (see Fig.~\ref{fig:PR2}) and drop them off in the grey basket. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop-off location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions and orientations of the end effector within the cubby shelf.
 
 The search is done on an implicit graph $G_\calS$ constructed using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7 DOF arm. 
@@ -771,24 +789,6 @@ For our method, preprocessing (Alg.~\ref{alg:1}) took 1,445 seconds and returned
 Table~\ref{tab:stats} shows the numerical results of our experiments. Our method being provably guaranteed to find a plan in bounded time, shows a success rate of 100 percent. For the two preprocessing-based planners \textsf{PRM} and \textsf{MQ-RRT}, we report the results for a preprocessing time of 4T (T being the time consumed by our method in preprocessing). The \textsf{E-graph} planner is bootstrapped with a hundred paths precomputed for uniformly sampled goals in $G_S$. For each of these three multi-query planners while running the experiments, the newly-created edges were appended to the auxilary data (tree, roadmap or \textsf{E-graph}) for the subsequent queries.
 
 Among other planners, \textsf{PRM} shows the highest success rate but at the cost of a large memory footprint. The \textsf{E-graph} planner has a small memory footprint but it shows significantly longer planning times. \textsf{RRT-Connect} being a single-query planner happens to be the slowest. Our method shows a speedup of over tenfold in query time as compared to \textsf{PRM} and \textsf{MQ-RRT} and about three orders of magnitude speedup over the \textsf{E-graph} planner and \textsf{RRT-Connect}. The plots in Fig.~\ref{fig:plots} show how the success rate and the memory footprints of \textsf{PRM} and \textsf{MQ-RRT} vary as a function of the preprocessing time. For our domain the \textsf{PRM} seems to saturate in terms of the success rate after T time whereas \textsf{MQ-RRT} continues to improve provided more preprocessing time whereas in terms of memory usage, \textsf{PRM}'s memory footprint grows more rapidly than \textsf{MQ-RRT}.
-\begin{figure*}
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{success.png}
-        \caption{}
-        \label{fig:success}
-    \end{subfigure}
-    ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
-      %(or a blank line to force the subfigure onto a new line)
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{memory.png}
-        \caption{}
-        \label{fig:memory}
-    \end{subfigure}
-    \caption{Preprocessing time vs. (\subref{fig:success}) the success rates and (\subref{fig:memory}) memory useage for the 200 queries averaged over 4 trials with different random number generation seeds for the \textsf{PRM} and the \textsf{MQ-RRT} algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The green cross shows our method for reference.}
-    \label{fig:plots}
-\end{figure*}
-
 
 \section{Conclusion and future work}
 We proposed a preprocessing-based motion planning algorithm that provides provable real-time performance guarantees for repetitive tasks and showed simulated results on a PR2 robot. 

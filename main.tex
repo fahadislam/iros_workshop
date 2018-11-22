@@ -290,7 +290,7 @@ For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.45\textwidth]{Approach-new.pdf}
+\includegraphics[width=0.45\textwidth]{Approach-new2.pdf}
   	% \vspace{-2mm}
   \caption{
   Visualization of approach. Subregions are depicted in green, 
@@ -515,13 +515,13 @@ Note that at no point  do we need to perform collision checking in the query pha
 \begin{algorithmic}[1]
 \Procedure{FindGreedyPath}{$s_1, s_2$}
 	\label{alg:3:greedy-call-start}
-	\State $s_{\text{curr}} \leftarrow s_1$; \hspace{2mm} $\pi \leftarrow \emptyset$
-	\While{$s_{\text{curr}} \neq s_2$}
+	\State $s_{\text{curr}} \leftarrow s_2$; \hspace{2mm} $\pi \leftarrow \emptyset$
+	\While{$s_{\text{curr}} \neq s_1$}
 		\State $\pi \leftarrow \pi \cdot s_{\text{curr}}$
 		\Comment{append current state to path}
-    	\State $s_{\text{curr}} \leftarrow \argmin\limits_{s \in \text{Preds}(s_{\text{curr}})} h(s, s_2)$ 	\Comment{greedy predecessor}
+    	\State $s_{\text{curr}} \leftarrow \argmin\limits_{s \in \text{Preds}(s_{\text{curr}})} h(s, s_1)$ 	\Comment{greedy predecessor}
     \EndWhile
-    \State \Return $\pi$
+    \State \Return \textsc{Reverse} ($\pi$)   \Comment{reverse to get a path from $s_1$ to $s_2$}
 \EndProcedure
 \label{alg:3:greedy-call-end}
 
@@ -532,9 +532,9 @@ Note that at no point  do we need to perform collision checking in the query pha
 		\If {$h(s_{\text{goal}}, \sAttract) < r_i$}
 		\Comment{$R_i$ covers $\sGoal$}
 		\label{alg:3:covers}
-  		\State $\pi_g \leftarrow$ \textsc{FindGreedyPath} ($\sGoal, \sAttract$)
+  		\State $\pi_g \leftarrow$ \textsc{FindGreedyPath} ($\sAttract, \sGoal$)
   		\label{alg:3:greedy-call}
-  		\State \Return $\pi_g \cdot \pi_i$	\Comment{append $\pi_g$ to~$\pi_i \in \calL$}
+  		\State \Return $\pi_i \cdot \pi_g$	\Comment{append $\pi_g$ to~$\pi_i \in \calL$}
   		\label{alg:3:return}
     \EndIf
 	\EndFor

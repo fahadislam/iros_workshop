@@ -448,10 +448,10 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
 \While{OPEN$\neq \emptyset$}
     \State $s \leftarrow$ OPEN.pop()
     \State insert $s$ in CLOSED
-    \State $s'_g \leftarrow \arg \min_{s' \in \text{Preds}(s)} h(s', \sAttract)$ 
+    \State $s'_g \leftarrow \argmin\limits_{s' \in \text{Preds}(s)} h(s', \sAttract)$ 
 %    \State $s'_g \leftarrow$ GreedySucc($s$)
 	\label{alg:2:greedy} 
- \Comment{greedy succesor}
+ \Comment{greedy predecessor}
  % acc. to some tie-breaking criteria}
     \If {$s'_g$ $\in$ $S_{\text{reachable}}$ and Valid(edge(s,$s'_g$))}  \label{alg:2:crit}
         \State $S_{\text{reachable}} \leftarrow S_{\text{reachable}} \cup \{s\}$  \Comment{$s$ is greedy} \label{alg:2:set}
@@ -519,7 +519,7 @@ Note that at no point  do we need to perform collision checking in the query pha
 	\While{$s_{\text{curr}} \neq s_2$}
 		\State $\pi \leftarrow \pi \cdot s_{\text{curr}}$
 		\Comment{append current state to path}
-    	\State $s_{\text{curr}} \leftarrow \arg \min_{s \in \text{Preds}(s_{\text{curr}})} h(s, s_2)$ 	\Comment{greedy succesor}
+    	\State $s_{\text{curr}} \leftarrow \argmin\limits_{s \in \text{Preds}(s_{\text{curr}})} h(s, s_2)$ 	\Comment{greedy predecessor}
     \EndWhile
     \State \Return $\pi$
 \EndProcedure

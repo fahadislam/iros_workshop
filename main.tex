@@ -105,23 +105,14 @@ We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold i
 
 \section{Introduction}
 %1. What is the problem?
-We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times.
-%2. Why is it relevant?
-As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
-While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
-Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the shelf or in different orientations.
-Fast planning times immediately correspond to faster unshelving capabilities. 
-Moreover, if the planner cannot \emph{guarantee} to pick items from the shelf in a timely manner, the system is required to account for possible backlogs by e.g., adding more floor space for shelves that are queued and not being unshelved---a costly backup in terms of both time and space.
+We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times. There exists manipulation domains where the planning takes non-trivial amount of time, despite the fact that the scenarios are well-structured. Specifically we consider the settings where the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
 
-%3. Why is it hard?
-Clearly, every time a task is presented to the robot, it can compute a desired path.
-However, this may incur large online planning times that may be unacceptable in many settings.
-%
-Alternatively, we could attempt to precompute for each start and goal pair a robot path.
-However, as the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable in high-dimensional configuration spaces\footnote{
-A robot configuration is a $d$-dimensional points describing the position and orientation of each one of the robot's $d$ joints.
-The configuration space of a robot is the $d$-dimensional space of all robot configurations.}.
-Thus, we need to balance memory constraints while providing provable real-time query times.
+%2. Why is it relevant?
+As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins (see Fig.~\ref{fig:PR2}). The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example [1]) and in academia (e.g., [2]).
+
+Another well-suited domain for our planner is a manipulator working at a conveyor belt where it has to pick up objects (arbitrarily positioned and oriented) coming on the conveyor (or drop them off onto a conveyor). In such a setting the robot has to deal with one object at a time and other objects don’t cause obstructions. As a result, the domain is also static but start/goal configurations may change. An autonomous robot working at a conveyor is also actively being pursued in industry (see [3]) and in academia (see [4][5]).
+
+Finally, in semi-static environments where there exists both static and non-static obstacles, we can also use our planner as an initial pass, having a conventional planner as a backup. We can preprocess our planner with only static obstacles and in the query time we can do a validity check of the computed path; if the path intersects any non-static obstacle, we can fall back to the conventional planner. This can immensely increase the overall throughput of a system if the environment is largely static. 
 
 \begin{figure}[tb]
   \centering
@@ -133,6 +124,26 @@ Thus, we need to balance memory constraints while providing provable real-time q
     \label{fig:PR2}
 % \vspace{-6mm}
 \end{figure}
+
+
+% As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins. The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example [1]) and in academia (e.g., [2]).
+% As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
+% While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
+% Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the shelf or in different orientations.
+% Fast planning times immediately correspond to faster unshelving capabilities. 
+% Moreover, if the planner cannot \emph{guarantee} to pick items from the shelf in a timely manner, the system is required to account for possible backlogs by e.g., adding more floor space for shelves that are queued and not being unshelved---a costly backup in terms of both time and space.
+
+
+
+%3. Why is it hard?
+Clearly, every time a task is presented to the robot, it can compute a desired path.
+However, this may incur large online planning times that may be unacceptable in many settings.
+%
+Alternatively, we could attempt to precompute for each start and goal pair a robot path.
+However, as the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable in high-dimensional configuration spaces\footnote{
+A robot configuration is a $d$-dimensional points describing the position and orientation of each one of the robot's $d$ joints.
+The configuration space of a robot is the $d$-dimensional space of all robot configurations.}.
+Thus, we need to balance memory constraints while providing provable real-time query times.
 
 %4. What have others done?
 As we detail in Sec.~\ref{sec:rel}, there has been intensive work 

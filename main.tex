@@ -60,7 +60,7 @@
 \setlength{\pdfpageheight}{11in}  %Required
 %PDF Info Is Required:
   \pdfinfo{
-/Title (Provable Infinite-Horizon Real-Time Planning for Repetitive Tasks)}
+/Title (Provable Indefinite-Horizon Real-Time Planning for Repetitive Tasks)}
 \setcounter{secnumdepth}{2}  
 
 \hypersetup{letterpaper,bookmarksopen,bookmarksnumbered,
@@ -78,7 +78,7 @@ urlcolor=blue
 % The file aaai.sty is the style file for AAAI Press 
 % proceedings, working notes, and technical reports.
 %
-\title{Provable Infinite-Horizon Real-Time Planning for Repetitive Tasks}
+\title{Provable Indefinite-Horizon Real-Time Planning for Repetitive Tasks}
 \author{
 Fahad Islam,
 Oren Salzman {\normalfont and}
@@ -92,7 +92,7 @@ maxim@cs.cmu.edu
 \maketitle
 
 \begin{abstract} 
-In many manipulation tasks, robots often have to perform highly-repetitive manipulation tasks in structured environments e.g. sorting mail in a mailroom or pick and place objects off a conveyor belt.
+In many robotic manipulation scenarios, robots often have to perform highly-repetitive tasks in structured environments e.g. sorting mail in a mailroom or pick and place objects off a conveyor belt.
 In this work we are interested in settings where tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
 Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the configuration-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
@@ -117,13 +117,13 @@ Finally, in semi-static environments where there exists both static and non-stat
 
 \begin{figure}[tb]
   \centering
-    \includegraphics[width=0.35\textwidth]{PR2.png}
+    \includegraphics[width=0.42\textwidth]{PR2.png}
     % \vspace{-2mm}
   \caption{
-  Motivating scenario---a robot (PR2) picking up objects from shelves and placing them into a bin.
+  Motivating scenario---a robot (PR2) to perform mail-sorting task in a mailroom environment.
 }
     \label{fig:PR2}
-% \vspace{-6mm}
+\vspace{-4mm}
 \end{figure}
 
 
@@ -736,10 +736,10 @@ Having said that, this may come at the price of increasing the number of subregi
 Our method generates plans by stitching together a path from the library $\calL$ (computed offline using some planner $\calP$), and a path computed online which is returned by the greedy search on a discretized graph $G_\calS$. For the former, our method simply inherits the completeness properties of the planner $\calP$, whereas for the latter, our method is resolution complete; it follows from the correctness discussion (Section~\ref{subsec:correct}). 
 
 \subsection{Bound on Solution Quality}
-If we precompute each path $\pi_i \in \calL$ with the optimal cost $c^*(\pi_i)$, from triangular inequality it can be trivially shown that the quality of complete path $\pi$ computed by our method has an additive suboptimality bound,
- \begin{center}
+Let the function $c(.)$ denote the cost of a path and $c^*(.)$ denote the cost of an optimal path. Assuming that we precompute each path $\pi_i \in \calL$ with the optimal cost $c^*(\pi_i)$, from triangular inequality it can be trivially shown that the quality of complete path $\pi$ computed by our method has an additive suboptimality bound; i.e.,
+ % \begin{center}
  $c(\pi) - c^*(\pi) < 2 * c(\pi_g)$,
- \end{center}
+ % \end{center}
 where $c(\pi_g)$ is the cost of the greedy path from the attractor to the goal state.
 
 \section{Evaluation}

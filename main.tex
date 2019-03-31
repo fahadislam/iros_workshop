@@ -38,6 +38,7 @@
 \newcommand{\calS}{\ensuremath{\mathcal{S}}\xspace}
 \newcommand{\calR}{\ensuremath{\mathcal{R}}\xspace}
 \newcommand{\calD}{\ensuremath{\mathcal{D}}\xspace}
+\newcommand{\calP}{\ensuremath{\mathcal{P}}\xspace}
 
 \newcommand{\sAttract}{\ensuremath{s^{\text{attractor}}_i}\xspace}
 \newcommand{\sStart}{\ensuremath{s_{\text{start}}\xspace}}
@@ -59,7 +60,7 @@
 \setlength{\pdfpageheight}{11in}  %Required
 %PDF Info Is Required:
   \pdfinfo{
-/Title (Provable Infinite-Horizon Real-Time Planning for Repetitive Tasks)}
+/Title (Provable Indefinite-Horizon Real-Time Planning for Repetitive Tasks)}
 \setcounter{secnumdepth}{2}  
 
 \hypersetup{letterpaper,bookmarksopen,bookmarksnumbered,
@@ -77,21 +78,21 @@ urlcolor=blue
 % The file aaai.sty is the style file for AAAI Press 
 % proceedings, working notes, and technical reports.
 %
-\title{Provable Infinite-Horizon Real-Time Planning for Repetitive Tasks}
-%\author{
-%Fahad Islam,
-%Oren Salzman {\normalfont and}
-%Maxim Likhachev
-%\\
-%The Robotics Institute, Carnegie Mellon University\\
-%%
-%\{fi,osalzman\}@andrew.cmu.edu,
-%maxim@cs.cmu.edu
-%}
+\title{Provable Indefinite-Horizon Real-Time Planning for Repetitive Tasks}
+\author{
+Fahad Islam,
+Oren Salzman {\normalfont and}
+Maxim Likhachev
+\\
+The Robotics Institute, Carnegie Mellon University\\
+%
+\{fi,osalzman\}@andrew.cmu.edu,
+maxim@cs.cmu.edu
+}
 \maketitle
 
-\begin{abstract}
-In manufacturing and automation settings, robots often have to perform highly-repetitive manipulation tasks in structured environments. 
+\begin{abstract} 
+In many robotic manipulation scenarios, robots often have to perform highly-repetitive tasks in structured environments e.g. sorting mail in a mailroom or pick and place objects off a conveyor belt.
 In this work we are interested in settings where tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
 Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the configuration-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
@@ -105,13 +106,35 @@ We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold i
 
 \section{Introduction}
 %1. What is the problem?
-We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times.
+We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times. There exists manipulation domains where the planning takes non-trivial amount of time, despite the fact that the scenarios are well-structured. Specifically we consider the settings where the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
+
 %2. Why is it relevant?
-As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
-While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
-Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the shelf or in different orientations.
-Fast planning times immediately correspond to faster unshelving capabilities. 
-Moreover, if the planner cannot \emph{guarantee} to pick items from the shelf in a timely manner, the system is required to account for possible backlogs by e.g., adding more floor space for shelves that are queued and not being unshelved---a costly backup in terms of both time and space.
+As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins (see Fig.~\ref{fig:PR2}). The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example [1]) and in academia (e.g., [2]).
+
+Another well-suited domain for our planner is a manipulator working at a conveyor belt where it has to pick up objects (arbitrarily positioned and oriented) coming on the conveyor (or drop them off onto a conveyor). In such a setting the robot has to deal with one object at a time and other objects don’t cause obstructions. As a result, the domain is also static but start/goal configurations may change. An autonomous robot working at a conveyor is also actively being pursued in industry (see [3]) and in academia (see [4][5]).
+
+Finally, in semi-static environments where there exists both static and non-static obstacles, we can also use our planner as an initial pass, having a conventional planner as a backup. We can preprocess our planner with only static obstacles and in the query time we can do a validity check of the computed path; if the path intersects any non-static obstacle, we can fall back to the conventional planner. This can immensely increase the overall throughput of a system if the environment is largely static. 
+
+\begin{figure}[tb]
+  \centering
+    \includegraphics[width=0.42\textwidth]{PR2.png}
+    % \vspace{-2mm}
+  \caption{
+  Motivating scenario---a robot (PR2) to perform mail-sorting task in a mailroom environment.
+}
+    \label{fig:PR2}
+\vspace{-4mm}
+\end{figure}
+
+
+% As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins. The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example [1]) and in academia (e.g., [2]).
+% As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
+% While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
+% Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the shelf or in different orientations.
+% Fast planning times immediately correspond to faster unshelving capabilities. 
+% Moreover, if the planner cannot \emph{guarantee} to pick items from the shelf in a timely manner, the system is required to account for possible backlogs by e.g., adding more floor space for shelves that are queued and not being unshelved---a costly backup in terms of both time and space.
+
+
 
 %3. Why is it hard?
 Clearly, every time a task is presented to the robot, it can compute a desired path.
@@ -122,17 +145,6 @@ However, as the set of possible start and goal locations may be large, caching p
 A robot configuration is a $d$-dimensional points describing the position and orientation of each one of the robot's $d$ joints.
 The configuration space of a robot is the $d$-dimensional space of all robot configurations.}.
 Thus, we need to balance memory constraints while providing provable real-time query times.
-
-\begin{figure}[tb]
-  \centering
-    \includegraphics[width=0.35\textwidth]{PR2.png}
-    % \vspace{-2mm}
-  \caption{
-  Motivating scenario---a robot (PR2) picking up objects from shelves and placing them into a bin.
-}
-    \label{fig:PR2}
-% \vspace{-6mm}
-\end{figure}
 
 %4. What have others done?
 As we detail in Sec.~\ref{sec:rel}, there has been intensive work 
@@ -719,6 +731,16 @@ We can measure the depth of each subregion in Alg.~\ref{alg:2} by keeping track 
 \textbf{Remark:}
 Note that we can also bound the number of expansions required for the query phase by bounding the maximum depth of the subregions. We can do that by terminating Alg.~\ref{alg:2} when the $R_i$ reaches the maximum depth or if the existing termination condition (line ~\ref{alg:2:terminate}) is satisfied.
 Having said that, this may come at the price of increasing the number of subregions.
+
+\subsection{Algorithm Completeness}
+Our method generates plans by stitching together a path from the library $\calL$ (computed offline using some planner $\calP$), and a path computed online which is returned by the greedy search on a discretized graph $G_\calS$. For the former, our method simply inherits the completeness properties of the planner $\calP$, whereas for the latter, our method is resolution complete; it follows from the correctness discussion (Section~\ref{subsec:correct}). 
+
+\subsection{Bound on Solution Quality}
+Let the function $c(.)$ denote the cost of a path and $c^*(.)$ denote the cost of an optimal path. Assuming that we precompute each path $\pi_i \in \calL$ with the optimal cost $c^*(\pi_i)$, from triangular inequality it can be trivially shown that the quality of complete path $\pi$ computed by our method has an additive suboptimality bound; i.e.,
+ % \begin{center}
+ $c(\pi) - c^*(\pi) < 2 * c(\pi_g)$,
+ % \end{center}
+where $c(\pi_g)$ is the cost of the greedy path from the attractor to the goal state.
 
 \section{Evaluation}
 \label{sec:eval}

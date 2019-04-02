@@ -92,8 +92,8 @@ maxim@cs.cmu.edu
 \maketitle
 
 \begin{abstract} 
-In many robotic manipulation scenarios, robots often have to perform highly-repetitive tasks in structured environments e.g. sorting mail in a mailroom or pick and place objects off a conveyor belt.
-In this work we are interested in settings where tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
+In many robotic manipulation scenarios, robots often have to perform highly-repetitive tasks in structured environments e.g. sorting mail in a mailroom or pick and place objects on a conveyor belt.
+In this work we are interested in settings where the tasks are similar, yet not identical (e.g., due to uncertain orientation of objects) and motion planning needs to be extremely fast. 
 Preprocessing-based approaches prove to be very beneficial in these settings---they analyze the configuration-space offline to generate some auxiliary information which can then be used in the query phase to speedup planning times. 
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is extremely challenging.
@@ -101,7 +101,7 @@ Typically, the tighter the requirement is on query times the larger the memory f
 While there are planners that guarantee real-time performance by limiting the planning horizon, we are not aware of general-purpose planners capable of doing it for infinite horizon (i.e., planning to the goal).
 %
 To this end, we propose a preprocessing-based method that provides \emph{provable} bounds on the query time while incurring only a small amount of memory overhead in the query phase.
-We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm, while provably guaranteeing a maximum query time of less than 3 milliseconds.
+We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm, while provably guaranteeing success.
 \end{abstract}
 
 \section{Introduction}
@@ -109,15 +109,13 @@ We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold i
 We consider the problem of planning robot motions for highly-repetitive tasks while ensuring bounds on the planning times. There exists manipulation domains where the planning takes non-trivial amount of time, despite the fact that the scenarios are well-structured. Specifically we consider the settings where the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
 
 %2. Why is it relevant?
-As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins (see Fig.~\ref{fig:PR2}). The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example [1]) and in academia (e.g., [2]).
+As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins (see Fig.~\ref{fig:PR2}). The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example~\cite{DBot}) and in academia (e.g.,~\cite{hwang2015lazy}).
 
-Another well-suited domain for our planner is a manipulator working at a conveyor belt where it has to pick up objects (arbitrarily positioned and oriented) coming on the conveyor (or drop them off onto a conveyor). In such a setting the robot has to deal with one object at a time and other objects don’t cause obstructions. As a result, the domain is also static but start/goal configurations may change. An autonomous robot working at a conveyor is also actively being pursued in industry (see [3]) and in academia (see [4][5]).
-
-Finally, in semi-static environments where there exists both static and non-static obstacles, we can also use our planner as an initial pass, having a conventional planner as a backup. We can preprocess our planner with only static obstacles and in the query time we can do a validity check of the computed path; if the path intersects any non-static obstacle, we can fall back to the conventional planner. This can immensely increase the overall throughput of a system if the environment is largely static. 
+Another well-suited domain for our planner is a manipulator working at a conveyor belt where it has to pick up objects (arbitrarily positioned and oriented) coming on the conveyor (or drop them off onto a conveyor). In such a setting the robot has to deal with one object at a time and other objects don’t cause obstructions. As a result, the domain is also static but start/goal configurations may change. An autonomous robot working at a conveyor is also actively being pursued in industry (see again~\cite{DBot}) and in academia (see \cite{cowley2013perception,menon2014motion}).
 
 \begin{figure}[tb]
   \centering
-    \includegraphics[width=0.42\textwidth]{PR2.png}
+    \includegraphics[width=0.45\textwidth]{PR2.png}
     % \vspace{-2mm}
   \caption{
   Motivating scenario---a robot (PR2) to perform mail-sorting task in a mailroom environment.
@@ -818,6 +816,7 @@ We proposed a preprocessing-based motion planning algorithm that provides provab
 %We aim to perform experiments on the hardware with the conveyor setup to demonstrate the efficiency of our planner on a real world system.
 Key questions that remain open for future work regard providing guarantees on the solution quality and bounding the number of covering subregions.
 We conjuncture that computing the minimal number of subregions is an \textsf{NP-Hard} problem and, if this is the case, we can possibly seek to compute a set of subregions whose size is within some constant-factor approximation of  the size of the optimal set.
+In semi-static environments, where there exists both static and non-static obstacles, we can also use our planner as an initial pass, having a conventional planner as a backup. We can preprocess our planner with only static obstacles and in the query time we can do a validity check of the computed path; if the path intersects any non-static obstacle, we can fall back to the conventional planner. This can immensely increase the overall throughput of a system if the environment is largely static. 
 Finally, we plan to extend our approach to non static, yet similar environments where there are only small changes in the environment. 
 %\vfill
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

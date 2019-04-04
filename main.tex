@@ -1,26 +1,28 @@
 \def\year{2019}\relax
 %File: formatting-instruction.tex
-\documentclass[letterpaper]{article} %DO NOT CHANGE THIS
-\usepackage{aaai19}  %Required
-\usepackage{times}  %Required
-\usepackage{helvet}  %Required
-\usepackage{courier}  %Required
-\usepackage{url}  %Required
-\usepackage{graphicx}  %Required
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai19}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet} % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{graphicx}  % DO NOT CHANGE THIS
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
 
 %%%%%%%%%%%%%%%%%%%%%
-\usepackage[bookmarks=true]{hyperref}
-%\usepackage[draft]{hyperref}
-\usepackage{graphicx}
+% \usepackage[bookmarks=true]{hyperref}
 \usepackage[font=footnotesize]{subcaption}
 \usepackage[font=footnotesize]{caption}
-\usepackage{hyperref}
-\usepackage{url}
+% \usepackage{hyperref}
 \usepackage{amsmath,amssymb,amsfonts,amsfonts}
 \usepackage{xspace}
 \usepackage{wrapfig}
-\usepackage{color}
-\usepackage{graphicx}
+% \usepackage{color}
 \usepackage{enumitem}
 
 \usepackage{algorithm}
@@ -63,18 +65,17 @@
 /Title (Provable Indefinite-Horizon Real-Time Planning for Repetitive Tasks)}
 \setcounter{secnumdepth}{2}  
 
-\hypersetup{letterpaper,bookmarksopen,bookmarksnumbered,
-pdfpagemode=UseOutlines,
-colorlinks=true,
-linkcolor=blue,
-anchorcolor=blue,
-citecolor=blue,
-filecolor=blue,
-menucolor=blue,
-urlcolor=blue
-}
+% \hypersetup{letterpaper,bookmarksopen,bookmarksnumbered,
+% pdfpagemode=UseOutlines,
+% colorlinks=true,
+% linkcolor=blue,
+% anchorcolor=blue,
+% citecolor=blue,
+% filecolor=blue,
+% menucolor=blue,
+% urlcolor=blue
+% }
 %\hypersetup{draft}
- \begin{document}
 % The file aaai.sty is the style file for AAAI Press 
 % proceedings, working notes, and technical reports.
 %
@@ -88,7 +89,10 @@ The Robotics Institute, Carnegie Mellon University\\
 %
 \{fi,osalzman\}@andrew.cmu.edu,
 maxim@cs.cmu.edu
+\thanks{ We thank Honeywell for their support of this work. This  research  was  also in part sponsored  by  ARL, under  the  Robotics CTA program grant W911NF-10-2-0016
 }
+}
+\begin{document}
 \maketitle
 
 \begin{abstract} 
@@ -98,10 +102,10 @@ Preprocessing-based approaches prove to be very beneficial in these settings---t
 %
 Typically, the tighter the requirement is on query times the larger the memory footprint will be. In particular, for high-dimensional spaces, providing real-time planning capabilities is extremely challenging.
 % Moreover, as far as we are aware of, none of the general-purpose algorithms come with \emph{provable} guarantees on the real-time performance.
-While there are planners that guarantee real-time performance by limiting the planning horizon, we are not aware of general-purpose planners capable of doing it for infinite horizon (i.e., planning to the goal).
+While there are planners that guarantee real-time performance by limiting the planning horizon, we are not aware of general-purpose planners capable of doing it for indefinite horizon (i.e., planning to the goal).
 %
 To this end, we propose a preprocessing-based method that provides \emph{provable} bounds on the query time while incurring only a small amount of memory overhead in the query phase.
-We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm, while provably guaranteeing success.
+We evaluate our method on a 7-DOF robot arm and show a speedup of over tenfold in query time when compared to the PRM algorithm.
 \end{abstract}
 
 \section{Introduction}
@@ -111,17 +115,17 @@ We consider the problem of planning robot motions for highly-repetitive tasks wh
 %2. Why is it relevant?
 As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins (see Fig.~\ref{fig:PR2}). The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example~\cite{DBot}) and in academia (e.g.,~\cite{hwang2015lazy}).
 
-Another well-suited domain for our planner is a manipulator working at a conveyor belt where it has to pick up objects (arbitrarily positioned and oriented) coming on the conveyor (or drop them off onto a conveyor). In such a setting the robot has to deal with one object at a time and other objects don’t cause obstructions. As a result, the domain is also static but start/goal configurations may change. An autonomous robot working at a conveyor is also actively being pursued in industry (see again~\cite{DBot}) and in academia (see \cite{cowley2013perception,menon2014motion}).
+Another well-suited domain for our planner is a manipulator working at a conveyor belt where it has to pick up objects (arbitrarily positioned and oriented) coming on the conveyor (or drop them off onto a conveyor). In such a setting the robot has to deal with one object at a time and other objects do not cause obstructions. As a result, the domain is also static but start/goal configurations may change. An autonomous robot working at a conveyor is also actively being pursued in industry (see again~\cite{DBot}) and in academia (see \cite{cowley2013perception,menon2014motion}).
 
 \begin{figure}[tb]
   \centering
-    \includegraphics[width=0.45\textwidth]{PR2.png}
+    \includegraphics[width=0.42\textwidth]{PR2.png}
     % \vspace{-2mm}
   \caption{
   Motivating scenario---a robot (PR2) to perform mail-sorting task in a mailroom environment.
 }
     \label{fig:PR2}
-\vspace{-4mm}
+% \vspace{-4mm}
 \end{figure}
 
 
@@ -140,14 +144,14 @@ However, this may incur large online planning times that may be unacceptable in 
 %
 Alternatively, we could attempt to precompute for each start and goal pair a robot path.
 However, as the set of possible start and goal locations may be large, caching pre-computed paths for all these queries in advance is unmanageable in high-dimensional configuration spaces\footnote{
-A robot configuration is a $d$-dimensional points describing the position and orientation of each one of the robot's $d$ joints.
+A robot configuration is a $d$-dimensional point describing the position of each one of the robot's $d$ joints.
 The configuration space of a robot is the $d$-dimensional space of all robot configurations.}.
 Thus, we need to balance memory constraints while providing provable real-time query times.
 
 %4. What have others done?
 As we detail in Sec.~\ref{sec:rel}, there has been intensive work 
 for fast online planning~\cite{LA18} and 
-for learning from experience in known environments~\cite{PCCL12,PDCL13,BAG12,CSMOC15}.
+for learning from experience in known environments~\cite{PCCL12,PDCL13,berenson2012robot,CSMOC15}.
 Similarly, compressing precomputed data structures in the context of motion-planning is a well-studied problem with efficient algorithms~\cite{SSAH14,DB14}.
 %5. What's missing?
 However, to the extent of our knowledge, there is no approach that can \emph{provably guarantee} that a solution will be found to \emph{any} query with bounds on planning time and using a small memory footprint.
@@ -155,31 +159,31 @@ However, to the extent of our knowledge, there is no approach that can \emph{pro
 %\vspace{8 mm}
 
 %6. What is our ONE key insight?
-In this work, we consider the specific case where the start is fixed. Returning to our running example, this corresponds to having a fixed drop-off location above the bin.
+In this work, we consider the specific case where the start is fixed. Returning to our running example, this corresponds to having a fixed pickup location above the cart (see Fig.~\ref{fig:PR2}).
 %
 Our key insight is that given any state $s$, we can efficiently compute a set of states for which a greedy search (to be defined formally in Sec.~\ref{sec:alg}) towards~$s$ is collision free.
 Importantly, the runtime-complexity of such a greedy search is bounded and there is no need to perform computationally-complex collision-detection operations. 
-This insight allows us to generate in an offline phase a small set of so-called ``attractor vertices'' together with a path between each attractor vertex and the goal.
-In the query phase, a path is generated by performing a greedy search to an attractor state followed by the precomputed path to the start.
+This insight allows us to generate in an offline phase a small set of so-called ``attractor vertices'' together with a path between each attractor vertex and the start.
+In the query phase, a path is generated by performing a greedy search from the goal to an attractor state followed by the precomputed path from the start.
 We describe our approach in Sec.~\ref{sec:alg} and analyze it in Sec.~\ref{sec:analysis}.
 
 
 %7. How do we compare against the state of the art?
 We evaluate our approach in Sec.~\ref{sec:eval} in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2}).
-We demonstrate a speedup of over tenfold in query time when compared to the \textsf{PRM} algorithm with a memory footprint of less than 8 Mb while guaranteeing a maximal query time of less than 3 milliseconds.
+We demonstrate a speedup of over tenfold in query time when compared to the PRM algorithm with a memory footprint of less than 8 Mb while guaranteeing a maximal query time of less than 3 milliseconds (on our machine).
 
 %8. What are our contributions?
 %9. What are our limitations?
 
 \section{Related work}
 \label{sec:rel}
-A straightforward approach to efficiently preprocess a known environment is using the \textsf{PRM} algorithm~\cite{kavraki1996probabilistic} which generates a \emph{roadmap}\footnote{A roadmap is a graph embedded in the configuration space where vertices correspond to configurations and edges correspond to paths connecting close-by configurations.}.
-Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the start and goal to the roadmap. 
+A straightforward approach to efficiently preprocess a known environment is using the PRM algorithm~\cite{kavraki1996probabilistic} which generates a \emph{roadmap}\footnote{A roadmap is a graph embedded in the configuration space where vertices correspond to configurations and edges correspond to paths connecting close-by configurations.}.
+Once a a dense roadmap has been pre-computed, any query can be efficiently answered online by connecting the start and goal to the roadmap.
 Query times can be significantly sped up by further preprocessing the roadmaps using landmarks~\cite{paden2017landmark}.
-Unfortunately, there is no guarantee that a query can be connected to the roadmap as \textsf{PRM} only provides \emph{asymptotic} guarantees~\cite{KKL98}.
+Unfortunately, there is no guarantee that a query can be connected to the roadmap as PRM only provides \emph{asymptotic} guarantees~\cite{KKL98}.
 Furthermore, this connecting phase requires running a collision-detection algorithm which is typically considered the computational bottleneck in many motion-planning algorithms~\cite{L06}.
 
-Recently,the repetition roadmap~\cite{LA18} was suggested as a way to extend the \textsf{PRM} for the case of multiple highly-similar scenarios.
+Recently, the repetition roadmap~\cite{LA18} was suggested as a way to extend the PRM for the case of multiple highly-similar scenarios.
 While this approach exhibits significant speedup in computation time, it still suffers from the previously-mentioned shortcomings.
 
 A complementary approach to aggressively preprocess a given scenario is by minimizing collision-detection time.
@@ -188,11 +192,11 @@ circuitry~\cite{MFQSK16}
 or limiting the approach to standard manipulators~\cite{YMILV18}.
 
 An alternative approach to address our problem is to precompute a set of complete paths into a library and given a query, attempt to match complete paths from the library to the new query~\cite{berenson2012robot,jetchev2013fast}.
-Using paths from previous search episodes (also known as using experience) has also been an active line of work~\cite{PCCL12,PDCL13,BAG12,CSMOC15}.
+Using paths from previous search episodes (also known as using experience) has also been an active line of work~\cite{PCCL12,PDCL13,berenson2012robot,CSMOC15}.
 Some of these methods have been integrated with sparse motion-planning roadmaps (see e.g.,~\cite{SSAH14,DB14}) to reduce the memory footprint of the algorithm.
 Unfortunately, none of the mentioned algorithms provide bounded planning-time guarantees that are required by our applications.
 
-Our work bares resemblance to previous work on 
+Our work bears resemblance to previous work on 
 subgoal graphs~\cite{UK17,UK18} and to real-time planning~\cite{KL06,KS09,K90}.
 However, in the former, the entire configuration space is preprocessed in order to efficiently answer queries between \emph{any} pair of states which deems it applicable only to low-dimensional spaces (e.g., 2D or 3D).
 %{\color{blue} Also their $connect$ step is expensive as it requires a Dijkstra's like search to connect to the subgoal graph.} 
@@ -214,7 +218,7 @@ We are given in advance a start configuration~$\sStart \in \calX$ and some goal 
 We emphasize that the goal region may contain invalid configurations.
 In the query phase we are given multiple queries $(\sStart, s_{\text{goal}})$ where $s_{\rm goal} \in G$ is a valid configuration and for each query, we need to compute a collision-free path connecting $\sStart$ to $s_{\text{goal}}$.
 
-Coming back to our motivating example of picking items from  shelves and placing them into a bin---the start configuration would be some predefined configuration above the bin where the robot can drop off the item and the goal region would be all possible placements of the robot's end effector that can grasp an object in one shelf. The environment is static as the only abstacles are the shelves and the bin which do not change between queries.
+Coming back to our motivating example of mail sorting---the start configuration would be some predefined configuration above the cart where the robot can pick up the envelopes from and the goal region would comprise of all possible placements of the robot's end effector in the cubbies. The environment is static as the only obstacles in the environment are the shelves and the cart which remain stationary in between queries.
 
 We discretize $\calX$ into a state lattice $\calS$ such that any state~$s \in \calS$ is connected to a set of successors and predecessors via a mapping Succs/Preds: $\calS \rightarrow 2^\calS$.
 Define $G_\calS := \calS \cap G$ to be the states that reside in the goal region. Note that although our approach is applicable to general graphs (directed or undirected), to be able to reuse the planned path in the reverse direction (e.g. in our motivating example for the motion from the shelve to the start configuration) the graph needs to be undirected.
@@ -231,7 +235,7 @@ However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
     $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Preds}(s_1)} h(s_1', s_2)$.
   \end{center}
 
-	\item The heuristic $h$ function should induce that the goal region is \emph{convex} with respect to $h$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+	\item The heuristic function $h$ should induce that the goal region is \emph{convex} with respect to $h$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
      $\argmin\limits_{s_1' \in \text{Preds}(s_1)} h(s_1', s_2) \in G_\calS$.
   \end{center}
@@ -316,14 +320,14 @@ For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 \subsection {Algorithm}
 \label{subsec:alg}
 \subsubsection{Preprocessing Phase}
-The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$ and the goal region~$G_\calS$ and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from~\sStart to each~\sAttract. 
+The preprocessing phase of our algorithm, detailed in Alg.~\ref{alg:1}, takes as input the start state~$\sStart$, the goal region~$G_\calS$ and a conventional motion planner $\calP$, and outputs a set of subregions~$\calR$ and the corresponding library of paths~$\calL$ from~\sStart to each~\sAttract. 
 
 The algorithm covers~$G_\calS$ by iteratively finding a state $s$ not covered\footnote{Here, a state $s$ is said to be covered if there exists some subregion $R \in \calR$ such that $s \in R$.} by any subregion and computing a new subregion centered at $s$.
 To ensure that $G_\calS$ is completely covered (Property~\ref{property:2}) we maintain a set~$V$ of valid (collision free) and a set $I$ of invalid (in collision) states called \emph{frontier states} (lines~\ref{alg:1:v} and~\ref{alg:1:i}, respectively).
 We also construct subregions centered around invalid states~$\hat{\calR}$ to efficiently store which invalid states have been considered.
 We start by initializing~$V$ with some random state in $G_\calS$ and iterate until both~$V$ and~$I$ are empty, which will ensure that $G_\calS$ is indeed covered even if $G_\calS$ is not fully connected.
 
-At every iteration, we pop a state from $V$ (line~\ref{alg:1:pop}), and if there is no subregion covering it, we add it as a new attractor state and compute a path $\pi_i$ from $\sStart$ (line~\ref{alg:1:path}).
+At every iteration, we pop a state from $V$ (line~\ref{alg:1:pop}), and if there is no subregion covering it, we add it as a new attractor state and compute a path $\pi_i$ from $\sStart$ (line~\ref{alg:1:path}) using the planner $\calP$.
 We then compute the corresponding subregion (line~\ref{alg:1:cr} and Alg.~\ref{alg:2}).
 
 As we will see shortly, computing a subregion corresponds to a Dijkstra-like search centered at the attractor state.
@@ -335,8 +339,8 @@ Once $V$ gets empty the algorithm starts to search for states which are valid an
 
 \begin{algorithm}[t]
 \footnotesize
-\hspace*{\algorithmicindent} \textbf{Inputs:} $G_\calS$, $\sStart$
-\Comment{goal region and start state} 
+\hspace*{\algorithmicindent} \textbf{Inputs:} $G_\calS$, $\sStart$, $\calP$
+\Comment{goal region, start state and a planner} 
 
 \hspace*{\algorithmicindent} \textbf{Outputs:} 
 $\calR, \calL$
@@ -368,7 +372,7 @@ $\calR, \calL$
             \Comment{$s$ is not covered}
 				\State $\sAttract \leftarrow s$               
 				\label{alg:1:attract} 
-                \State $\pi_i$ = \textsc{PlanPath}($\sStart, \sAttract$);	\label{alg:1:pp}
+                \State $\pi_i$ = $\calP.$\textsc{PlanPath}($\sStart, \sAttract$);	\label{alg:1:pp}
                 \hspace{2mm }
                 $\calL \leftarrow \calL \cup \{ \pi_i \}$  \label{alg:1:path}
                 \State $(\text{OPEN}, r_i) \leftarrow$ \textsc{ComputeReachability}($\sAttract$) \label{alg:1:cr}
@@ -412,7 +416,7 @@ $\calR, \calL$
   	% \vspace{-2mm}
   \caption{
   Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G$ (tiled grey) containing an obstacle (red).
-  Frontier states  and first state not in $R_i$ are depicted by circles and a cross, respectively.
+  Frontier states and first state not in $R_i$ are depicted by circles and a cross, respectively.
 }
    	\label{fig:alg2}
 % \vspace{-6mm}
@@ -498,7 +502,7 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
   % \Comment{$s$ is not covered and $s$ is valid}
     \State \Return ($\{s\}$, $h$($s$, $\hat{s}$))
   \EndIf
-  \For {each $s' \in \{\text{Succs}(s) \cup \text{Preds}(s)\} \cap G_\calS$} \label{alg:2:prun}
+  \For {each $s' \in \{\text{Succs}(s) \cup \text{Preds}(s)\} \cap G_\calS$}
     \If {$s' \notin$ CLOSED}
         \State insert $s'$ in OPEN with priority $h(s', \sAttract)$
     \EndIf
@@ -565,16 +569,16 @@ However,  our algorithm typically covers most of the goal region $G_\calS$ using
 Thus, if we order our subregions (offline) according to their corresponding radii, there is a higher chance of finding a covering subregion faster. While this optimization does not change our worst-case analysis (Sec.~\ref{sec:analysis}), it speeds up the query time in case the number of subregions is very large.
 
 \subsubsection{Efficiently constructing $\calL$}
-Constructing paths to the attractor states (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}) can be done using any motion planning algorithm.
-In our implementation we chose to use \textsf{RRT-Connect}~\cite{KL00}.
+Constructing paths to the attractor states (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}) can be done using any motion planning algorithm $\calP$.
+In our implementation we chose to use RRT-Connect~\cite{KL00}.
 Interestingly, this step dominates the running time of the preprocessing step.
 %
-To improve the preprocessing time, we initially set a small timeout for \textsf{RRT-Connect} to compute a path from an attractor state $\sAttract$ to $\sStart$.
-Attractor states for which \textsf{RRT-Connect} fails to find a path to $\sAttract$ are marked as \textit{bad} attractors and we do not grow the subregions from them. 
+To improve the preprocessing time, we initially set a small timeout for RRT-Connect to compute a path from an attractor state $\sStart$ to $\sAttract$.
+Attractor states for which RRT-Connect fails to find a path to $\sAttract$ are marked as \textit{bad} attractors and we do not grow the subregions from them. 
 These, so-called \textit{bad} attractors are discarded when other subregions cover them.
 %In practice, most of the bad attractor states automatically get covered by other subregions. 
 
-When Alg.~\ref{alg:1} terminates, we reload the valid list $V$ with the remaining bad attractors and rerun Alg.~\ref{alg:1} but this time with a large timeout for \textsf{RRT-Connect}. 
+When Alg.~\ref{alg:1} terminates, we reload the valid list $V$ with the remaining bad attractors and rerun Alg.~\ref{alg:1} but this time with a large timeout for RRT-Connect. 
 %
 We can also increase the timeout with smaller increments and run Alg.~\ref{alg:1} iteratively until there are no more bad attractors (assuming that there exists a solution for each goal state $\in$ $G_\calS$).
 
@@ -589,7 +593,7 @@ This step reduces both the query complexity (see Sec.~\ref{sec:analysis}) as wel
 \label{sec:analysis}
 In this section we formally prove that 
 our algorithm is correct (Sec.~\ref{subsec:correct}) and 
-analyze its computational complexity (Sec.~\ref{subsec:complexity}).
+analyze its computational complexity, completeness and bound on solution quality (Sec.~\ref{subsec:complexity},~\ref{subsec:completeness} and ~\ref{subsec:quality} respectively).
 
 \subsection{Correctness}
 \label{subsec:correct}
@@ -723,7 +727,7 @@ and
 Step~(i) requires iterating over all subregions (in the worst case) which takes $O(|\calR|)$ steps while 
 step~(ii) requires expanding the states along the path from $\sGoal$ to $\sAttract$ which requires~$O(\calD)$ expansions where $\calD$ is the depth (maximal number of expansions of a greedy search) of the deepest subregion. 
 For each expansion we need to find the greedy predecessor, considering at most $b$ predecessors, where $b$ is the maximal branching factor of our graph.
-We can measure the depth of each subregion in Alg.~\ref{alg:2} by keeping track of the depth of each expanded state from the root i.e., $\sAttract$. Hence, overall the query phase takes $O(|\calR| + \calD \cdot b)$ operations. The maximal query time can also be empirically computed after the preprocessing phase.
+We can measure the depth of each subregion in Alg.~\ref{alg:2} by keeping track of the depth of each expanded state from the root i.e., $\sAttract$. Hence, overall the query phase takes $O(|\calR| + \calD \cdot b)$ operations. The maximal query time can also be empirically profiled after the preprocessing phase.
 
 %
 \textbf{Remark:}
@@ -731,10 +735,12 @@ Note that we can also bound the number of expansions required for the query phas
 Having said that, this may come at the price of increasing the number of subregions.
 
 \subsection{Algorithm Completeness}
-Our method generates plans by stitching together a path from the library $\calL$ (computed offline using some planner $\calP$), and a path computed online which is returned by the greedy search on a discretized graph $G_\calS$. For the former, our method simply inherits the completeness properties of the planner $\calP$, whereas for the latter, our method is resolution complete; it follows from the correctness discussion (Section~\ref{subsec:correct}). 
+\label{subsec:completeness}
+Our method generates plans by stitching together a path from the library $\calL$ (computed offline using some planner~$\calP$), and a path computed online which is returned by the greedy search on a discretized graph $G_\calS$. For the former, our method simply inherits the completeness properties of the planner $\calP$, whereas for the latter, our method is resolution complete; it follows from the correctness discussion (Section~\ref{subsec:correct}). 
 
 \subsection{Bound on Solution Quality}
-Let the function $c(.)$ denote the cost of a path and $c^*(.)$ denote the cost of an optimal path. Assuming that we precompute each path $\pi_i \in \calL$ with the optimal cost $c^*(\pi_i)$, from triangular inequality it can be trivially shown that the quality of complete path $\pi$ computed by our method has an additive suboptimality bound; i.e.,
+\label{subsec:quality}
+Let the function $c(\cdot)$ denote the cost of a path and $c^*(\cdot)$ denote the cost of an optimal path. Assuming that we precompute each path $\pi_i \in \calL$ with the optimal cost $c^*(\pi_i)$, from the triangle inequality it can be trivially shown that the quality of complete path $\pi$ computed by our method has an additive suboptimality bound; i.e.,
  % \begin{center}
  $c(\pi) - c^*(\pi) < 2 * c(\pi_g)$,
  % \end{center}
@@ -747,7 +753,7 @@ where $c(\pi_g)$ is the cost of the greedy path from the attractor to the goal s
   % \begin{center}
   %   \resizebox{\textwidth}{!}{%
   %     \begin{tabular}{ l | c c c  c c c  c c c  c  c}
-  %        & \textsf{PRM} (T) & \textsf{PRM} (2T) & \textsf{PRM} (4T) & \textsf{RRT} (T) & \textsf{RRT} (2T) & \textsf{RRT} (4T) & \textsf{E}-graph & \textsf{RRT-Connect} & \textbf{Our method} \\
+  %        & PRM (T) & PRM (2T) & PRM (4T) & RRT (T) & RRT (2T) & RRT (4T) & \textsf{E}-graph & RRT-Connect & \textbf{Our method} \\
   %      \hline
   %      Planning time [ms]& 15.2 (25.5) & 16.8 (57.2) & 16.3 (40.0) & 15.6 (24.9) & 16.8 (28.0) & 16.9 (30.1) & - (-) & 459.1 (3063.65) & \textbf{0.42 (0.7)}\\
   %      Success rate [$\%$]& 98 & 100 & 100 & 90.5 & 88 & 89.5 & - & 98 & \textbf{100}\\
@@ -757,14 +763,14 @@ where $c(\pi_g)$ is the cost of the greedy path from the attractor to the goal s
     \resizebox{14cm}{!}{%
     % \resizebox{1.4\textwidth}{!}{\begin{minipage}{\textwidth}
         \begin{tabular}{ l | c c c c c}
-           & \textsf{PRM (4T)} & \textsf{MQ-RRT} (4T) & \textsf{E-graph} & \textsf{RRT-Connect} & \textbf{Our method} \\
+           & PRM (4T) & MQ-RRT (4T) & E-graph & RRT-Connect & \textbf{Our method} \\
          \hline
          Planning time [ms]& 21.7 (59.6) & 21.2 (35.5) & 497.8 (9678.5) & 1960 (9652) & \textbf{1.0 (1.6)}\\
          Success rate [$\%$]& 86 & 69.75 & 76.5 & 83.8 & \textbf{100}\\
          Memory usage [Mb] & 1,828 & 225.75 & \textbf{2.0} & - & {7.8}
         \end{tabular}
     }
-    \caption{Experimental results comparing our method with other single- and multi-query planners. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with quadruple the time that our method takes in precomputation (T = 1,445 seconds). Note that the worst-case time for our method shown in these results ($\sim$1.6 millisecond) is the empirical one and not the computed provable time bound which is 3 milliseconds for this environment.
+    \caption{Experimental results comparing our method with other single- and multi-query planners tested on Intel® Core i7‐5600U (2.6GHz) machine with 16GB RAM. The table shows the mean/worst-case planning times, success rates and memory usage for our method and for other multi-query planners preprocessed with quadruple the time that our method takes in precomputation (T = 1,445 seconds). Note that the worst-case time for our method shown in these results ($\sim$1.6 millisecond) is the empirical one and not the computed provable time bound which is 3 milliseconds (on our machine) for this environment.
     Results of sampling-based planners are averaged over 200 uniformly sampled queries. For the sampling-based planners the results were averaged over 4 trials (for the same set of 200 queries) with different random number generation seeds.}
     \label{tab:stats}
   % \end{center}
@@ -785,41 +791,42 @@ where $c(\pi_g)$ is the cost of the greedy path from the attractor to the goal s
         \caption{}
         \label{fig:memory}
     \end{subfigure}
-    \caption{Preprocessing time vs. (\subref{fig:success}) the success rates and (\subref{fig:memory}) memory useage for the 200 queries averaged over 4 trials with different random number generation seeds for the \textsf{PRM} and the \textsf{MQ-RRT} algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The green cross shows our method for reference.}
+    \caption{Preprocessing time vs. (\subref{fig:success}) the success rates and (\subref{fig:memory}) memory useage for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The green cross shows our method for reference.}
     \label{fig:plots}
 \end{figure*}
 
-We evaluated our algorithm on the PR2 robot for a single-arm (7-DOF) motion-planning problem. The illustrated task here is to pick up objects from the cubby shelf (see Fig.~\ref{fig:PR2}) and drop them off in the grey basket. Such settings are common in warehouses where the robot may have to encounter the same scenario over and over again. The start state is the state corresponding to the drop-off location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions and orientations of the end effector within the cubby shelf.
+We evaluated our algorithm on the PR2 robot for a single-arm (7-DOF) motion-planning problem. The illustrated task here is to pick up envelopes from a cart and put them in the cubby shelves (see Fig.~\ref{fig:PR2}). Such settings are common in mailroom environments where the robot may have to encounter the same scenario over and over again. The start state is a fixed state corresponding to the pickup location, whereas the task-relevant goal region~$G$ is specified by bounding the position and orientation of the end effector. For this domain, we define~$G$ as a bounding box covering all possible positions and orientations of the end effector within the cubby shelf.
 
 The search is done on an implicit graph $G_\calS$ constructed using $\textit{motion primitives}$ which are small kinematically feasible motions. We define the primitives in the task-space respresentation as small motions for the robot end effector in position axes ($\textit{x, y, z}$) and orientation axes of Euler angles ($\textit{roll, pitch, yaw}$), and a joint-angle motion for the redundant joint of the 7-DOF arm. 
-The heurstic function is the Euclidean distance in these seven dimensions. The discretization we use for the graph $G_\calS$ is two~cm for the position axes, ten degrees for the Euler axes and five degrees for the redundant joint. 
-For this domain, we keep the $\textit{pitch}$ and $\textit{roll}$ of the end effector fixed and allow motion primitives along the remaining five dimensions i.e. $\textit{x, y, z, yaw}$ and the reduntant joint angle. We also limit the $\textit{yaw}$ to be between negative thirty and thirty degrees. Note that the specification of the $G_\calS$ is purely task specific and we exploit the task constraints to limit the size of $G_\calS$ which makes our preprocessing step tractable (Assumption~\ref{assum:1}).
+The heurstic function is the Euclidean distance in these seven dimensions. The discretization we use for the graph $G_\calS$ is 2~cm for the position axes, 10 degrees for the Euler axes and 5 degrees for the redundant joint. 
+For this domain, we keep the $\textit{pitch}$ and $\textit{roll}$ of the end effector fixed and allow motion primitives along the remaining five dimensions i.e. $\textit{x, y, z, yaw}$ and the reduntant joint angle. We also limit the $\textit{yaw}$ to be between -30 and 30 degrees. Note that the specification of the $G_\calS$ is purely task specific and we exploit the task constraints to limit the size of $G_\calS$ which makes our preprocessing step tractable (Assumption~\ref{assum:1}).
 
-We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 uniformly sampled goal states from $G$. Among the multi-query planners, we implemented \textsf{PRM}, a multi-query version of \textsf{RRT} which we name \textsf{MQ-RRT} and the \textsf{E-graph} planner. 
-For \textsf{MQ-RRT}, we precompute an \textsf{RRT} tree rooted at  $\sStart$ offline (similar to \textsf{PRM}) and query it by trying to connect $\sGoal$ to the nearest nodes of the precomputed tree. We use the same connection strategy for \textsf{MQ-RRT} as the one that the asymptotically-optimal version of \textsf{PRM} uses\footnote{In order for the quality of paths obtained the \textsf{PRM} to converge to the quality of the optimal solution, a query should be connected to its $k$ nearest neighbors where 
+We compared our approach with different single- and multi-query planners in terms of planning times, success rates and memory consumption (see Table~\ref{tab:stats}) for 200 uniformly sampled goal states from $G$. Among the multi-query planners, we implemented PRM, a multi-query version of RRT which we name MQ-RRT and the E-graph planner. 
+For MQ-RRT, we precompute an RRT tree rooted at  $\sStart$ offline (similar to PRM) and query it by trying to connect $\sGoal$ to the nearest nodes of the precomputed tree. We use the same connection strategy for MQ-RRT as the one that the asymptotically-optimal version of PRM uses\footnote{In order for the quality of paths obtained the PRM to converge to the quality of the optimal solution, a query should be connected to its $k$ nearest neighbors where 
 $k = e(1+1/d)\log(n)$.
 Here $n$ is the number of nodes in the tree/roadmap and $d$ is the dimensionality of the configuration space~\cite{karaman2011sampling,SSH16}. 
 }.
-For \textsf{PRM}, we precomputed the paths from all the nodes in~$G$ to~$s_{\text{start}}$ (this is analogous to our library~$\calL$). 
+For PRM, we precomputed the paths from all the nodes in~$G$ to~$s_{\text{start}}$ (this is analogous to our library~$\calL$). 
 The query stage thus only required the connect operation (i.e. attempting to connect to $k$ nearest neighbors of $\sGoal$). For both of these planners we also added a goal-region bias by directly sampling from~$G$, five percent of the time\footnote{We used OMPL~\cite{SMK12} for comparisons with the sampling-based planners and modified the implementations as per needed.}. 
 
-For single-query planning, we only report the results for \textsf{RRT-Connect} as it has the fastest run times from our experience. For \textsf{PRM} and \textsf{MQ-RRT}, if the connect operation fails for a query, we considered that case as a failure. For \textsf{RRT-Connect}, we set a timeout of 10 seconds.
+For single-query planning, we only report the results for RRT-Connect as it has the fastest run times from our experience. For PRM and MQ-RRT, if the connect operation fails for a query, we considered that case as a failure. For RRT-Connect, we set a timeout of 10 seconds.
 
-For our method, preprocessing (Alg.~\ref{alg:1}) took 1,445 seconds and returned 1,390 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use \textsf{RRT-Connect}. For the first run of Alg.~\ref{alg:1}, we set the timeout to be 10 seconds and for the second run (after reloading $V$ with the bad attractors), we set the timeout to be 60 seconds. By doing so the algorithm finishes successfully with having no remaining bad attractors.
+For our method, preprocessing (Alg.~\ref{alg:1}) took 1,445 seconds and returned 1,390 subregions. For precomputing paths (Alg.~\ref{alg:1}, line~\ref{alg:1:pp}), we use RRT-Connect. For the first run of Alg.~\ref{alg:1}, we set the timeout to be 10 seconds and for the second run (after reloading $V$ with the bad attractors), we set the timeout to be 60 seconds. By doing so the algorithm finishes successfully with having no remaining bad attractors.
 
-Table~\ref{tab:stats} shows the numerical results of our experiments. Our method being provably guaranteed to find a plan in bounded time, shows a success rate of 100 percent. For the two preprocessing-based planners \textsf{PRM} and \textsf{MQ-RRT}, we report the results for a preprocessing time of 4T (T being the time consumed by our method in preprocessing). The \textsf{E-graph} planner is bootstrapped with a hundred paths precomputed for uniformly sampled goals in $G_S$. For each of these three multi-query planners while running the experiments, the newly-created edges were appended to the auxilary data (tree, roadmap or \textsf{E-graph}) to be used for the subsequent queries.
+Table~\ref{tab:stats} shows the numerical results of our experiments. Our method being provably guaranteed to find a plan in bounded time, shows a success rate of 100 percent. For the two preprocessing-based planners PRM and MQ-RRT, we report the results for a preprocessing time of 4T (T being the time consumed by our method in preprocessing). The E-graph planner is bootstrapped with a hundred paths precomputed for uniformly sampled goals in $G_S$. For each of these three multi-query planners while running the experiments, the newly-created edges were appended to the auxilary data (tree, roadmap or E-graph) to be used for the subsequent queries.
 
-Among other planners, \textsf{PRM} shows the highest success rate but at the cost of a large memory footprint. The \textsf{E-graph} planner has a small memory footprint but it shows significantly longer planning times. \textsf{RRT-Connect} being a single-query planner happens to be the slowest. Our method shows a speedup of over tenfold in query time as compared to \textsf{PRM} and \textsf{MQ-RRT} and about three orders of magnitude speedup over the \textsf{E-graph} planner and \textsf{RRT-Connect}. The plots in Fig.~\ref{fig:plots} show how the success rate and the memory footprints of \textsf{PRM} and \textsf{MQ-RRT} vary as a function of the preprocessing time. For our domain the \textsf{PRM} seems to saturate in terms of the success rate after T time whereas \textsf{MQ-RRT} continues to improve provided more preprocessing time whereas in terms of memory usage, \textsf{PRM}'s memory footprint grows more rapidly than \textsf{MQ-RRT}.
+Among other planners, PRM shows the highest success rate but at the cost of a large memory footprint. The E-graph planner has a small memory footprint but it shows significantly longer planning times. RRT-Connect being a single-query planner happens to be the slowest. Our method shows a speedup of over tenfold in query time as compared to PRM and MQ-RRT and about three orders of magnitude speedup over the E-graph planner and RRT-Connect. The plots in Fig.~\ref{fig:plots} show how the success rate and the memory footprints of PRM and MQ-RRT vary as a function of the preprocessing time. For our domain the PRM seems to saturate in terms of the success rate after T time whereas MQ-RRT continues to improve provided more preprocessing time. In terms of memory usage, PRM's memory footprint grows more rapidly than MQ-RRT.
 
 \section{Conclusion and future work}
 We proposed a preprocessing-based motion planning algorithm that provides provable real-time performance guarantees for repetitive tasks and showed simulated results on a PR2 robot. 
 %We aim to perform experiments on the hardware with the conveyor setup to demonstrate the efficiency of our planner on a real world system.
-Key questions that remain open for future work regard providing guarantees on the solution quality and bounding the number of covering subregions.
-We conjuncture that computing the minimal number of subregions is an \textsf{NP-Hard} problem and, if this is the case, we can possibly seek to compute a set of subregions whose size is within some constant-factor approximation of  the size of the optimal set.
-In semi-static environments, where there exists both static and non-static obstacles, we can also use our planner as an initial pass, having a conventional planner as a backup. We can preprocess our planner with only static obstacles and in the query time we can do a validity check of the computed path; if the path intersects any non-static obstacle, we can fall back to the conventional planner. This can immensely increase the overall throughput of a system if the environment is largely static. 
-Finally, we plan to extend our approach to non static, yet similar environments where there are only small changes in the environment. 
+Key questions that remain open for future work regard providing stronger guarantees on the solution quality and bounding the number of covering subregions.
+We conjuncture that computing the minimal number of subregions is an NP-Hard problem and, if this is the case, we can possibly seek to compute a set of subregions whose size is within some constant-factor approximation of  the size of the optimal set.
+Finally, we plan to extend our approach to semi-static environments where there exists both static and non-static obstacles. In such settings, we can also use our planner as an initial pass, having a conventional planner as a backup. We can preprocess our planner with only static obstacles and in the query time we can do a validity check of the computed path; if the path intersects any non-static obstacle, we can fall back to the conventional planner. This can immensely increase the overall throughput of a system if the environment is largely static. 
+ 
 %\vfill
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\fontsize{9.5pt}{10.5pt} \selectfont
 \bibliographystyle{aaai}
 \bibliography{references}
 

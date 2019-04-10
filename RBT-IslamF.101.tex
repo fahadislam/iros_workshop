@@ -9,29 +9,22 @@
 \usepackage{graphicx} % DO NOT CHANGE THIS
 \urlstyle{rm} % DO NOT CHANGE THIS
 \def\UrlFont{\rm}  % DO NOT CHANGE THIS
-\usepackage{graphicx}  % DO NOT CHANGE THIS
-\frenchspacing  % DO NOT CHANGE THIS
-\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
-\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
 
-%%%%%%%%%%%%%%%%%%%%%
-% \usepackage[bookmarks=true]{hyperref}
-\usepackage[font=footnotesize]{subcaption}
-\usepackage[font=footnotesize]{caption}
-% \usepackage{hyperref}
-\usepackage{amsmath,amssymb,amsfonts,amsfonts}
+%% additional packages
+\usepackage{amsmath,amssymb,amsfonts}
 \usepackage{xspace}
-\usepackage{wrapfig}
-% \usepackage{color}
 \usepackage{enumitem}
-
 \usepackage{algorithm}
 \usepackage{algorithmicx}
 \usepackage[noend]{algpseudocode}
 \usepackage{algpseudocode}
 \usepackage{parskip}
 \usepackage{amsthm}
-\usepackage{subcaption}
+\usepackage{subfig}
+
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
 
 \algrenewcommand\algorithmicindent{1.0em}%
 
@@ -48,7 +41,6 @@
 \newcommand{\sNom}{\ensuremath{s_{\text{nominal}}\xspace}}
 \DeclareMathOperator*{\argmin}{arg\,min}
 
-
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
 \newtheorem{definition}{Definition}
@@ -57,25 +49,14 @@
 \newcommand{\update}[1]{{\color{magenta}#1}}  
 %%%%%%%%%%%%%%%%%%%
 
-\frenchspacing  %Required
-\setlength{\pdfpagewidth}{8.5in}  %Required
-\setlength{\pdfpageheight}{11in}  %Required
-%PDF Info Is Required:
-  \pdfinfo{
-/Title (Provable Indefinite-Horizon Real-Time Planning for Repetitive Tasks)}
+\pdfinfo{
+/Title (Provable Indefinite-Horizon Real-Time Planning for Repetitive Tasks)
+/Author (
+Fahad Islam, Oren Salzman and Maxim Likhachev
+)}
+
 \setcounter{secnumdepth}{2}  
 
-% \hypersetup{letterpaper,bookmarksopen,bookmarksnumbered,
-% pdfpagemode=UseOutlines,
-% colorlinks=true,
-% linkcolor=blue,
-% anchorcolor=blue,
-% citecolor=blue,
-% filecolor=blue,
-% menucolor=blue,
-% urlcolor=blue
-% }
-%\hypersetup{draft}
 % The file aaai.sty is the style file for AAAI Press 
 % proceedings, working notes, and technical reports.
 %
@@ -84,14 +65,14 @@
 Fahad Islam,
 Oren Salzman {\normalfont and}
 Maxim Likhachev
+\thanks{This research was in part sponsored by ARL, under the Robotics CTA program grant W911NF-10-2-0016.
+}
 \\
 The Robotics Institute, Carnegie Mellon University\\
-%
 \{fi,osalzman\}@andrew.cmu.edu,
 maxim@cs.cmu.edu
-\thanks{ We thank Honeywell for their support of this work. This  research  was  also in part sponsored  by  ARL, under  the  Robotics CTA program grant W911NF-10-2-0016
 }
-}
+
 \begin{document}
 \maketitle
 
@@ -119,7 +100,7 @@ Another well-suited domain for our planner is a manipulator working at a conveyo
 
 \begin{figure}[tb]
   \centering
-    \includegraphics[width=0.42\textwidth]{PR2.png}
+    \includegraphics[width=0.42\textwidth]{pr2.png}
     % \vspace{-2mm}
   \caption{
   Motivating scenario---a robot (PR2) to perform mail-sorting task in a mailroom environment.
@@ -127,16 +108,6 @@ Another well-suited domain for our planner is a manipulator working at a conveyo
     \label{fig:PR2}
 % \vspace{-4mm}
 \end{figure}
-
-
-% As a running example, consider the problem of mail-sorting where a robot has to put envelopes into appropriate bins. The newly-inserted envelopes do not present any new clutter, and therefore the domain is really static. This domain is being actively pursued in both industry (see for example [1]) and in academia (e.g., [2]).
-% As a running example, consider the problem of a robot picking up objects from a warehouse shelf and placing them into bins (see Fig.~\ref{fig:PR2}). This task is currently performed by human workers, and there is hope that robots will ultimately perform this task~\cite{correll2018analysis}.
-% While the environment does not change, the start and goal in each task are similar, yet not identical to the start and goal in previous tasks.
-% Differences in the exact start and goal positions may be due to uncertainty in the environment as objects may be placed on different parts of the shelf or in different orientations.
-% Fast planning times immediately correspond to faster unshelving capabilities. 
-% Moreover, if the planner cannot \emph{guarantee} to pick items from the shelf in a timely manner, the system is required to account for possible backlogs by e.g., adding more floor space for shelves that are queued and not being unshelved---a costly backup in terms of both time and space.
-
-
 
 %3. Why is it hard?
 Clearly, every time a task is presented to the robot, it can compute a desired path.
@@ -169,7 +140,7 @@ We describe our approach in Sec.~\ref{sec:alg} and analyze it in Sec.~\ref{sec:a
 
 
 %7. How do we compare against the state of the art?
-We evaluate our approach in Sec.~\ref{sec:eval} in simulation on the PR2 robot\footnote{http://www.willowgarage.com/pages/pr2/overview} (see Fig.~\ref{fig:PR2}).
+We evaluate our approach in Sec.~\ref{sec:eval} in simulation on the PR2 robot\footnote{~\url{http://www.willowgarage.com/pages/pr2/overview}} (see Fig.~\ref{fig:PR2}).
 We demonstrate a speedup of over tenfold in query time when compared to the PRM algorithm with a memory footprint of less than 8 Mb while guaranteeing a maximal query time of less than 3 milliseconds (on our machine).
 
 %8. What are our contributions?
@@ -230,12 +201,12 @@ However, storing a path from $\sStart$ to each state in $G_\calS$ is infeasible.
   
   \item \label{assum:2} The planner has access to a heuristic function $h: \calS \times \calS \rightarrow \mathbb{R}$ which can estimate the distance between any two states in $G_\calS$. Moreover, 
  \begin{itemize}
- 	\item The heuristic function should be \textit{weakly-monotone} with respect to $G_\calS$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+  \item The heuristic function should be \textit{weakly-monotone} with respect to $G_\calS$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
     $h(s_1, s_2) \geq \min\limits_{s_1' \in \text{Preds}(s_1)} h(s_1', s_2)$.
   \end{center}
 
-	\item The heuristic function $h$ should induce that the goal region is \emph{convex} with respect to $h$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
+  \item The heuristic function $h$ should induce that the goal region is \emph{convex} with respect to $h$, meaning that $\forall s_1, s_2  \in G_\calS$ where $s_1 \neq s_2 $, it holds that,
   \begin{center}
      $\argmin\limits_{s_1' \in \text{Preds}(s_1)} h(s_1', s_2) \in G_\calS$.
   \end{center}
@@ -264,8 +235,8 @@ Our algorithm relies heavily on the notion of a greedy search.  Thus, before we 
 \vspace{2mm}
 \begin{definition}
 \label{def:greedy-suc}
-	Let $s$ be some state and $h(\cdot)$ be some heuristic function.
-	A state $s' \in \text{Preds}(s)$ is said to be a \emph{greedy} predecessor of $s$ according to $h$ if it has the minimal $h$-value among all of $s$'s predecessors.
+  Let $s$ be some state and $h(\cdot)$ be some heuristic function.
+  A state $s' \in \text{Preds}(s)$ is said to be a \emph{greedy} predecessor of $s$ according to $h$ if it has the minimal $h$-value among all of $s$'s predecessors.
 \end{definition}
 Note that 
 if $h$ is weakly monotone with respect to $G_\calS$
@@ -276,8 +247,8 @@ In the rest of the text, when we use the term greedy predecessor, we assume that
 
 \vspace{2mm}
 \begin{definition}
-	Given a heuristic function $h(\cdot)$,
-	an algorithm is said to be a \emph{greedy search}	 with respect to $h$ if for every state it returns its greedy predecessor according to $h$.
+  Given a heuristic function $h(\cdot)$,
+  an algorithm is said to be a \emph{greedy search}  with respect to $h$ if for every state it returns its greedy predecessor according to $h$.
 \end{definition}
 Note that we define the greedy search in terms of the predecessors and not the successors to account for the directionality of the graph. This will become more clear in Sec.~\ref{subsec:alg}.
 
@@ -292,7 +263,7 @@ These subregions, which may contain invalid states, are constructed in such a wa
 \begin{enumerate}[label={\textbf{P\arabic*}}]
   \item \label{property:1} For any valid goal state $s_{\text{goal}} \in R_i \cap G_\calS$, a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path to \sAttract.
   \item \label{property:2} The union of all the subregions completely cover the valid states in $G_\calS$. 
-		  Namely, $\forall s \in G_\calS~\text{s.t.}~s~\text{is valid}, \exists R \in \calR \ s.t. \ s \in R$.
+      Namely, $\forall s \in G_\calS~\text{s.t.}~s~\text{is valid}, \exists R \in \calR \ s.t. \ s \in R$.
 \end{enumerate}
 
 In the preprocessing stage, we precompute a library of collision-free paths $\calL$ which includes a path from $\sStart$ to each attractor state. 
@@ -305,15 +276,15 @@ For a visualization of our algorithm, see Fig.~\ref{fig:approach}.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.45\textwidth]{Approach-new2.pdf}
-  	% \vspace{-2mm}
+\includegraphics[width=0.45\textwidth]{approach.pdf}
+    % \vspace{-2mm}
   \caption{
   Visualization of approach. Subregions are depicted in green, 
   goal region~$G$ is depicted in tiled gray  containing obstacles (red).
   Precomputed paths from $s_{\rm{start}}$ to attractor states are depicted in blue.
- Given a query $(s_{\rm{start}}, s_{\rm{goal}})$, the returned path is given by $\pi_i$ appended with a greedy path~$\pi_g$ to \sAttract (reversed) which is depicted in purple.
+ Given a query $(s_{\rm{start}}, s_{\rm{goal}})$, the returned path is given by $\pi_i$ appended with a greedy path ~$\pi_g$ from $s_{\rm{goal}}$ to \sAttract (reversed), which is depicted in purple.
 }
-   	\label{fig:approach}
+    \label{fig:approach}
 % \vspace{-6mm}
 \end{figure}
 
@@ -357,22 +328,22 @@ $\calR, \calL$
   \State $V \leftarrow \{ s \}$   \Comment{valid frontier states initialized to random {state}} \label{alg:1:v}
   \State $I$ = $\emptyset$   \Comment{invalid frontier states} \label{alg:1:i}
   \State $ i \leftarrow 0$
-  		 \hspace{2mm} 
-  		 $\calL = \emptyset$
-  		 \hspace{2mm} 
-  		 $\calR = \emptyset$
-  		 \hspace{2mm} 
-  		 $\hat{\calR} = \emptyset$
-  		 
+       \hspace{2mm} 
+       $\calL = \emptyset$
+       \hspace{2mm} 
+       $\calR = \emptyset$
+       \hspace{2mm} 
+       $\hat{\calR} = \emptyset$
+       
   \vspace{2mm}
     \While {$V$ and $I$ are not empty}
         \While {$V$ is not empty}
           \State $s \leftarrow V.\text{pop}()$ \label{alg:1:pop}
             \If {$\nexists R \in \calR$  s.t. $s \in R$ }  \label{alg:1:discard}
             \Comment{$s$ is not covered}
-				\State $\sAttract \leftarrow s$               
-				\label{alg:1:attract} 
-                \State $\pi_i$ = $\calP.$\textsc{PlanPath}($\sStart, \sAttract$);	\label{alg:1:pp}
+        \State $\sAttract \leftarrow s$               
+        \label{alg:1:attract} 
+                \State $\pi_i$ = $\calP.$\textsc{PlanPath}($\sStart, \sAttract$); \label{alg:1:pp}
                 \hspace{2mm }
                 $\calL \leftarrow \calL \cup \{ \pi_i \}$  \label{alg:1:path}
                 \State $(\text{OPEN}, r_i) \leftarrow$ \textsc{ComputeReachability}($\sAttract$) \label{alg:1:cr}
@@ -380,7 +351,7 @@ $\calR, \calL$
                 \State insert Valid(OPEN) in $V$  \label{alg:1:insert_v}
                 \State insert Invalid(OPEN) in $I$   \label{alg:1:insert_i}
                 \State $R_i$ $\leftarrow$ $(\sAttract, r_i)$; 
-                \hspace{2mm} $ i \leftarrow i+1$				\hspace{2mm }
+                \hspace{2mm} $ i \leftarrow i+1$        \hspace{2mm }
                 $\calR \leftarrow \calR \cup \{ R_i \}$
                             \EndIf
         \EndWhile
@@ -389,12 +360,12 @@ $\calR, \calL$
         
         \While {$I$ is not empty} \label{alg:1:iv_loop}
             \State $s$ $\leftarrow$ $I.pop()$
-			\If {$\nexists R \in \calR \cup \hat{\calR}$ s.t. $s \in R$ }      \Comment{$s$ is not covered}
+      \If {$\nexists R \in \calR \cup \hat{\calR}$ s.t. $s \in R$ }      \Comment{$s$ is not covered}
 \State $(X, r)$ $\leftarrow$ \textsc{FindValidUncoveredState}($s$)
 %                \State $(X, r)$ $\leftarrow$ \textsc{FindValidUncoveredState}($s, r_{\text{max}}$)
                 \State $\hat{R}$ $\leftarrow$ $(s,r)$;
-				\hspace{2mm}
-				$\hat{\calR} \leftarrow \hat{\calR} \cup \{ \hat{R} \}$ \Comment{invalid subregion}  \label{alg:1:iv_region}
+        \hspace{2mm}
+        $\hat{\calR} \leftarrow \hat{\calR} \cup \{ \hat{R} \}$ \Comment{invalid subregion}  \label{alg:1:iv_region}
                 \If {$X$ is not empty}  \Comment{valid state found}  \label{alg:1:x_states}
                     \State insert $X$ in $V$
                     \State \textbf{break} \label{alg:1:break}
@@ -412,13 +383,13 @@ $\calR, \calL$
 
 \begin{figure}[tb]
   \centering
-  	\includegraphics[width=0.28\textwidth]{Alg2.pdf}
-  	% \vspace{-2mm}
+    \includegraphics[width=0.3\textwidth]{alg2.pdf}
+    % \vspace{-2mm}
   \caption{
   Visualization of Alg~\ref{alg:2}. Subregion $R_i$ (green) grown from $\sAttract$ in a goal region~$G$ (tiled grey) containing an obstacle (red).
   Frontier states and first state not in $R_i$ are depicted by circles and a cross, respectively.
 }
-   	\label{fig:alg2}
+    \label{fig:alg2}
 % \vspace{-6mm}
 \end{figure}
 
@@ -430,18 +401,13 @@ The following recursive definition formally captures the notion of a reachable s
 
 \vspace{2mm}
 \begin{definition}
-	Given some attractor state \sAttract, we say that a state $s \in G_\calS$ is reachable under some function $h(\cdot)$ with respect to \sAttract if either
-	(i)~$s = \sAttract$ or
-	(ii)~the greedy predecessor of $s$ with respect to $h(s,\sAttract)$ is reachable.
+  Given some attractor state \sAttract, we say that a state $s \in G_\calS$ is reachable under some function $h(\cdot)$ with respect to \sAttract if either
+  (i)~$s = \sAttract$ or
+  (ii)~the greedy predecessor of $s$ with respect to $h(s,\sAttract)$ is reachable.
 \end{definition}
-
-%Namely, the greedy successor $s'$ of every reachable state $s \in S_{\text{reachable}}$ is also a reachable state, except for the attractor state \sAttract. 
-%This will ensure that in the query phase, we can run a greedy search from any reachable state $s \in S_{\text{reachable}}$ and it will terminate in the attractor state. 
 
 The algorithm computes a subregion that covers the maximum number of reachable states that can fit into a hyper-ball defined by $h(s,\sAttract)$. 
 The search maintains a priority queue OPEN ordered according to $h(s,\sAttract)$. Initially, the successors of $\sAttract$ are inserted in the OPEN (line~\ref{alg:2:OPEN}). For each expanded successor, if its valid greedy predecessor is in $S_{\text{reachable}}$, then the successor is also labeled as reachable (lines~\ref{alg:2:crit} and~\ref{alg:2:set}). 
-%As the priority used for OPEN is the heuristic function, the radius of this hyper-ball keeps on increasing (line~\ref{alg:2:rad}). 
-
 
 The algorithm terminates when the search pops a state which is valid but does not have a greedy predecessor state in $S_{\text{reachable}}$ (line~\ref{alg:2:terminate}). Intuitively, this corresponds to  the condition when the reachability search exits an obstacle (see Fig.~\ref{fig:alg2}).
 At termination, all the states within the boundary of radius $r_i$ (excluding the boundary) are reachable.
@@ -465,7 +431,7 @@ At termination, all the states within the boundary of radius $r_i$ (excluding th
     \State insert $s$ in CLOSED
     \State $s'_g \leftarrow \argmin\limits_{s' \in \text{Preds}(s)} h(s', \sAttract)$ 
 %    \State $s'_g \leftarrow$ GreedySucc($s$)
-	\label{alg:2:greedy} 
+  \label{alg:2:greedy} 
  \Comment{greedy predecessor}
  % acc. to some tie-breaking criteria}
     \If {$s'_g$ $\in$ $S_{\text{reachable}}$ and Valid(edge(s,$s'_g$))}  \label{alg:2:crit}
@@ -529,12 +495,12 @@ Note that at no point  do we need to perform collision checking in the query pha
 
 \begin{algorithmic}[1]
 \Procedure{FindGreedyPath}{$s_1, s_2$}
-	\label{alg:3:greedy-call-start}
-	\State $s_{\text{curr}} \leftarrow s_2$; \hspace{2mm} $\pi \leftarrow \emptyset$
-	\While{$s_{\text{curr}} \neq s_1$}
-		\State $\pi \leftarrow \pi \cdot s_{\text{curr}}$
-		\Comment{append current state to path}
-    	\State $s_{\text{curr}} \leftarrow \argmin\limits_{s \in \text{Preds}(s_{\text{curr}})} h(s, s_1)$ 	\Comment{greedy predecessor}
+  \label{alg:3:greedy-call-start}
+  \State $s_{\text{curr}} \leftarrow s_2$; \hspace{2mm} $\pi \leftarrow \emptyset$
+  \While{$s_{\text{curr}} \neq s_1$}
+    \State $\pi \leftarrow \pi \cdot s_{\text{curr}}$
+    \Comment{append current state to path}
+      \State $s_{\text{curr}} \leftarrow \argmin\limits_{s \in \text{Preds}(s_{\text{curr}})} h(s, s_1)$  \Comment{greedy predecessor}
     \EndWhile
     \State \Return \textsc{Reverse} ($\pi$)   \Comment{reverse to get a path from $s_1$ to $s_2$}
 \EndProcedure
@@ -543,16 +509,16 @@ Note that at no point  do we need to perform collision checking in the query pha
 \vspace{2mm}
 
 \Procedure{Compute path}{$\sGoal$}
-	\For {each $R_i \in \calR$}
-		\If {$h(s_{\text{goal}}, \sAttract) < r_i$}
-		\Comment{$R_i$ covers $\sGoal$}
-		\label{alg:3:covers}
-  		\State $\pi_g \leftarrow$ \textsc{FindGreedyPath} ($\sAttract, \sGoal$)
-  		\label{alg:3:greedy-call}
-  		\State \Return $\pi_i \cdot \pi_g$	\Comment{append $\pi_g$ to~$\pi_i \in \calL$}
-  		\label{alg:3:return}
+  \For {each $R_i \in \calR$}
+    \If {$h(s_{\text{goal}}, \sAttract) < r_i$}
+    \Comment{$R_i$ covers $\sGoal$}
+    \label{alg:3:covers}
+      \State $\pi_g \leftarrow$ \textsc{FindGreedyPath} ($\sAttract, \sGoal$)
+      \label{alg:3:greedy-call}
+      \State \Return $\pi_i \cdot \pi_g$  \Comment{append $\pi_g$ to~$\pi_i \in \calL$}
+      \label{alg:3:return}
     \EndIf
-	\EndFor
+  \EndFor
 
 \EndProcedure
 \end{algorithmic}
@@ -576,7 +542,6 @@ Interestingly, this step dominates the running time of the preprocessing step.
 To improve the preprocessing time, we initially set a small timeout for RRT-Connect to compute a path from an attractor state $\sStart$ to $\sAttract$.
 Attractor states for which RRT-Connect fails to find a path to $\sAttract$ are marked as \textit{bad} attractors and we do not grow the subregions from them. 
 These, so-called \textit{bad} attractors are discarded when other subregions cover them.
-%In practice, most of the bad attractor states automatically get covered by other subregions. 
 
 When Alg.~\ref{alg:1} terminates, we reload the valid list $V$ with the remaining bad attractors and rerun Alg.~\ref{alg:1} but this time with a large timeout for RRT-Connect. 
 %
@@ -673,50 +638,17 @@ From the above we can immediately deduce the following corollary:
 \vspace{2mm}
 
 \begin{cor}
-	After preprocessing the goal region~$G_\calS$ (Alg.~\ref{alg:1} and~\ref{alg:2}), in the query phase we can compute a valid path for any valid state $s \in G_\calS$ using Alg.~\ref{alg:3}.
+  After preprocessing the goal region~$G_\calS$ (Alg.~\ref{alg:1} and~\ref{alg:2}), in the query phase we can compute a valid path for any valid state $s \in G_\calS$ using Alg.~\ref{alg:3}.
 \end{cor}
 
 
 \textbf{Remark}
 We can relax Assumption~\ref{assum:2} in two ways.
-The first is by explicitly tracking states not in the goal region instead of pruning them away (Alg.~\ref{alg:2} line~\ref{alg:2:prun}) and terminating not only when we found a valid state in $G_\calS$ whose predecessor is not reachable or is invalid (line~\ref{alg:2:crit}), but also when we found a state in $G_\calS$ whose predecessor is not in $G_\calS$.
+The first is by explicitly tracking states not in the goal region instead of pruning them away (Alg.~\ref{alg:2} line~\ref{alg:2:prun}).
 Unfortunately, this may require the algorithm to store many states not in $G_\calS$  which may be impractical (recall that Assumption~\ref{assum:1} only states that we can exhaustively store in memory the states in the goal region).
 An alternative, more practical way, to relax Assumption~\ref{assum:2}  is by terminating the search when we  encounter a state not in the goal region.
 This may cause the algorithm to generate much more subregions (with smaller radii) which may increase the memory footprint and the preprocessing times.
 
-
-%
-%
-%
-%\begin{lemma}
-%\label{lemma:1}
-%A greedy search with respect to $h(s, \sAttract)$ starting from any reachable state $s$ $\in$ $R_i \cap G_\calS$ towards the corresponding attractor state $\sAttract$ is complete.
-%\end{lemma}
-%
-%\begin{proof}
-%We can prove this lemma by contradiction. Firstly the greedy search in the query phase will always expand states which are $reachable$ because the greedy successor of every reachable state is also reachable (This is by the construction of Alg.~\ref{alg:2}). If we show that the greedy search will not encounter any cycles or in other words it will never reexpand a state, we prove that the search will eventually reach $\sAttract$ and is hence complete.
-%
-%
-%For the greedy search to get stuck in a cycle, the greedy successor of every state in the loop must also be a part of the loop, or in other words there cannot exist a state in the loop with its greedy successor exiting the loop. But that is not possible since at least the first state in this loop that got added to $S_{\text{reachable}}$ must have a greedy successor from outside the loop and must also belong to $S_{\text{reachable}}$ with a valid edge connecting to it (Alg.~\ref{alg:2}, lines~\ref{alg:2:crit} and~\ref{alg:2:set}). Hence the theorem is proved.
-%\end{proof}
-%
-%
-%\begin{theorem}
-%For any goal state $s_{\text{goal}} \in R_i \cap G_\calS$ (i.e $h(\sGoal,\sAttract) < r_i$), a greedy search with respect to $h(s, \sAttract)$ over $\calS$ starting at $\sGoal$ will result in a collision-free path to \sAttract. 
-%\end{theorem}
-%
-%\begin{proof}
-%The proof directly follows from the two lemmas. If for any goal state $\sGoal$, $h(\sGoal,\sAttract) < r_i$, then $\sGoal$ is reachable (Lemma~\ref{lemma:1}) and the greedy search towards $\sAttract$ is complete (Lemma~\ref{lemma:2}). Also as Alg.~\ref{alg:2} ensures that the transitions to the greedy successors are always valid we can guarantee that the greedy search will always return a valid path from $\sGoal$ to $\sAttract$.
-%\end{proof}
-
-%\begin{lemma}
-%Alg. ~\ref{alg:2} returns the maximum radius $r_i$ for a subregion $R_i$ within which every state $s$ with $h(s,\sAttract) < r$ is reachable. 
-%\end{lemma}
-%
-%\begin{proof}
-%{\color{blue} May be it is obvious and should just be added as a note and not a theorem.}
-% Once again we will prove by contradiction. Say Alg.~\ref{alg:2} returns a radius $r_{\text{max}} > r_i$. In that case the popped state $s$ for which Alg.~\ref{alg:2} terminated for not having a valid transition to a greedy successor which is also $reachable$ (lines~\ref{alg:2:crit} and~\ref{alg:2:set}), will also be included in $R_i$ while indeed it is not reachable. 
-%\end{proof} 
 
 \subsection{Time Complexity of Query Phase}
 \label{subsec:complexity}
@@ -750,17 +682,7 @@ where $c(\pi_g)$ is the cost of the greedy path from the attractor to the goal s
 \label{sec:eval}
 \begin{table*}[t]
 \centering
-  % \begin{center}
-  %   \resizebox{\textwidth}{!}{%
-  %     \begin{tabular}{ l | c c c  c c c  c c c  c  c}
-  %        & PRM (T) & PRM (2T) & PRM (4T) & RRT (T) & RRT (2T) & RRT (4T) & \textsf{E}-graph & RRT-Connect & \textbf{Our method} \\
-  %      \hline
-  %      Planning time [ms]& 15.2 (25.5) & 16.8 (57.2) & 16.3 (40.0) & 15.6 (24.9) & 16.8 (28.0) & 16.9 (30.1) & - (-) & 459.1 (3063.65) & \textbf{0.42 (0.7)}\\
-  %      Success rate [$\%$]& 98 & 100 & 100 & 90.5 & 88 & 89.5 & - & 98 & \textbf{100}\\
-  %      Memory usage [Mb] & 590 & 790 & 1290 & 118 & 183 & 284 & - & - & \textbf{7.8}\\
-  %     \end{tabular}
-  % }
-    \resizebox{14cm}{!}{%
+     \resizebox{1.8\columnwidth}{!}{%
     % \resizebox{1.4\textwidth}{!}{\begin{minipage}{\textwidth}
         \begin{tabular}{ l | c c c c c}
            & PRM (4T) & MQ-RRT (4T) & E-graph & RRT-Connect & \textbf{Our method} \\
@@ -777,21 +699,15 @@ where $c(\pi_g)$ is the cost of the greedy path from the attractor to the goal s
 % \vspace{-6mm}
 \end{table*}
 
-\begin{figure*}
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{success.png}
-        \caption{}
-        \label{fig:success}
-    \end{subfigure}
-    ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
-      %(or a blank line to force the subfigure onto a new line)
-    \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{memory.png}
-        \caption{}
-        \label{fig:memory}
-    \end{subfigure}
-    \caption{Preprocessing time vs. (\subref{fig:success}) the success rates and (\subref{fig:memory}) memory useage for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The green cross shows our method for reference.}
+\begin{figure*}[!ht]
+ \subfloat[\label{fig:success}]{%
+   \includegraphics[width=0.47\textwidth]{success.png}
+ }
+ \hfill
+ \subfloat[\label{fig:memory}]{%
+   \includegraphics[width=0.47\textwidth]{memory.png}
+ }
+    \caption{Preprocessing time vs~\subref{fig:success} the success rates and~\subref{fig:memory} memory useage for the 200 queries averaged over 4 trials with different random number generation seeds for the PRM and the MQ-RRT algorithms. The results were computed at the intervals which are multiple of the time T = 1,455 seconds, that our method takes for precomputation. The green cross shows our method for reference.}
     \label{fig:plots}
 \end{figure*}
 
@@ -826,7 +742,7 @@ Finally, we plan to extend our approach to semi-static environments where there 
  
 %\vfill
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\fontsize{9.5pt}{10.5pt} \selectfont
+\fontsize{9.3pt}{10.3pt} \selectfont
 \bibliographystyle{aaai}
 \bibliography{references}
 
